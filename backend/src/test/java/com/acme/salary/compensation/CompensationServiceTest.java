@@ -44,7 +44,7 @@ class CompensationServiceTest {
             new CompensationService(salaryHistoryRepository, employeeRepository, FIXED_CLOCK);
 
     @Test
-    void changeSalary_inserts_a_new_history_row_and_updates_the_employees_current_salary_to_match() {
+    void a_salary_change_inserts_a_new_history_row_and_updates_the_current_salary_to_match() {
         Employee employee = employee(7L, Money.of(new BigDecimal("90000.00"), "USD"));
         when(employeeRepository.findById(7L)).thenReturn(Optional.of(employee));
         when(salaryHistoryRepository.save(any(SalaryHistory.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -70,7 +70,7 @@ class CompensationServiceTest {
     }
 
     @Test
-    void changeSalary_rejects_a_zero_or_negative_amount_before_any_row_is_written() {
+    void a_zero_or_negative_salary_amount_is_rejected_before_any_row_is_written() {
         Employee employee = employee(7L, Money.of(new BigDecimal("90000.00"), "USD"));
         when(employeeRepository.findById(7L)).thenReturn(Optional.of(employee));
         SalaryChangeRequest zeroAmount = new SalaryChangeRequest(BigDecimal.ZERO, "USD", LocalDate.of(2024, 6, 1));
@@ -83,7 +83,7 @@ class CompensationServiceTest {
     }
 
     @Test
-    void changeSalary_throws_entity_not_found_for_a_missing_employee() {
+    void a_salary_change_for_an_unknown_employee_reports_not_found() {
         when(employeeRepository.findById(404L)).thenReturn(Optional.empty());
         SalaryChangeRequest request = new SalaryChangeRequest(new BigDecimal("100000.00"), "USD", LocalDate.of(2024, 6, 1));
 
@@ -93,7 +93,7 @@ class CompensationServiceTest {
     }
 
     @Test
-    void changeSalary_leaves_current_salary_pointing_at_the_later_effective_entry_when_backdated() {
+    void a_backdated_correction_leaves_current_salary_pointing_at_the_later_effective_entry() {
         Employee employee = employee(7L, Money.of(new BigDecimal("90000.00"), "USD"));
         when(employeeRepository.findById(7L)).thenReturn(Optional.of(employee));
         when(salaryHistoryRepository.save(any(SalaryHistory.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -112,7 +112,7 @@ class CompensationServiceTest {
     }
 
     @Test
-    void listHistory_returns_a_single_record_for_a_brand_new_employee() {
+    void a_brand_new_employees_history_contains_a_single_record() {
         when(employeeRepository.findById(3L)).thenReturn(Optional.of(employee(3L, Money.of(new BigDecimal("50000.00"), "USD"))));
         SalaryHistory singleEntry = new SalaryHistory(
                 3L, Money.of(new BigDecimal("50000.00"), "USD"), LocalDate.of(2024, 1, 1), Instant.parse("2024-01-01T00:00:00Z"));
@@ -126,7 +126,7 @@ class CompensationServiceTest {
     }
 
     @Test
-    void listHistory_returns_multiple_records_in_newest_effective_date_first_order() {
+    void salary_history_is_returned_newest_effective_date_first() {
         when(employeeRepository.findById(7L)).thenReturn(Optional.of(employee(7L, Money.of(new BigDecimal("100000.00"), "USD"))));
         SalaryHistory earlier = new SalaryHistory(
                 7L, Money.of(new BigDecimal("80000.00"), "USD"), LocalDate.of(2024, 1, 1), Instant.parse("2024-01-01T00:00:00Z"));
@@ -144,7 +144,7 @@ class CompensationServiceTest {
     }
 
     @Test
-    void hireEmployee_creates_exactly_one_employee_and_one_matching_initial_history_row() {
+    void a_new_hire_produces_exactly_one_employee_and_one_matching_initial_history_row() {
         LocalDate hireDate = LocalDate.of(2024, 6, 1);
         EmployeeCreateRequest request = new EmployeeCreateRequest(
                 "New Hire", Department.ENGINEERING, JobLevel.ENTRY, "US", hireDate, null,
@@ -177,7 +177,7 @@ class CompensationServiceTest {
     }
 
     @Test
-    void hireEmployee_rejects_a_zero_or_negative_starting_salary_before_any_row_is_written() {
+    void a_zero_or_negative_starting_salary_is_rejected_before_any_row_is_written() {
         EmployeeCreateRequest request = new EmployeeCreateRequest(
                 "New Hire", Department.ENGINEERING, JobLevel.ENTRY, "US",
                 LocalDate.of(2024, 6, 1), null, BigDecimal.ZERO, "USD");
@@ -190,7 +190,7 @@ class CompensationServiceTest {
     }
 
     @Test
-    void hireEmployee_rejects_an_unknown_manager_id() {
+    void an_unknown_manager_id_is_rejected_when_hiring() {
         EmployeeCreateRequest request = new EmployeeCreateRequest(
                 "New Hire", Department.ENGINEERING, JobLevel.ENTRY, "US",
                 LocalDate.of(2024, 6, 1), 999L, new BigDecimal("70000.00"), "USD");

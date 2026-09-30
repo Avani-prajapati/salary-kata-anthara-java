@@ -1,10 +1,12 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HarnessLoader } from '@angular/cdk/testing';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSelectHarness } from '@angular/material/select/testing';
+import { apiErrorInterceptor } from '../../core/http/api-error.interceptor';
+import { NotificationService } from '../../core/notifications/notification.service';
 import { EmployeeSummary } from '../../core/models/employee.model';
 import { AddEmployeeDialogComponent } from './add-employee-dialog.component';
 
@@ -19,9 +21,10 @@ describe('add employee dialog', () => {
     TestBed.configureTestingModule({
       imports: [AddEmployeeDialogComponent],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withInterceptors([apiErrorInterceptor])),
         provideHttpClientTesting(),
         { provide: MatDialogRef, useValue: dialogRef },
+        { provide: NotificationService, useValue: { notifyError: () => {} } },
       ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
@@ -143,6 +146,30 @@ describe('add employee dialog', () => {
     await fixture.whenStable();
 
     expect(dialogRef.close).toHaveBeenCalledWith(created);
+  });
+
+  it('ties a server-reported unknown manager id to the manager id input', async () => {
+    await fillRequiredFields();
+
+    submit();
+
+    const request = httpTesting.expectOne('/api/employees');
+    request.flush(
+      { code: 'INVALID_REFERENCE', message: 'Manager 999 was not found', field: 'managerId' },
+      { status: 422, statusText: 'Unprocessable Entity' },
+    );
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const managerInput = element().querySelector(
+      'input[formcontrolname="managerId"]',
+    ) as HTMLInputElement;
+    const formField = managerInput.closest('mat-form-field') as HTMLElement;
+    const error = formField.querySelector('mat-error') as HTMLElement;
+
+    expect(error?.textContent).toContain('Manager 999 was not found');
+    expect(managerInput.getAttribute('aria-describedby')).toContain(error.id);
+    expect(dialogRef.close).not.toHaveBeenCalled();
   });
 
   it('closes the dialog with no result and sends no request when cancelled', () => {

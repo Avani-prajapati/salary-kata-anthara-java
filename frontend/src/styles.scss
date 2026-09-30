@@ -44,6 +44,15 @@ body {
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+
+  &:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

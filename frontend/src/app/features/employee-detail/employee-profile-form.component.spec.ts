@@ -1,9 +1,11 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HarnessLoader } from '@angular/cdk/testing';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { MatSelectHarness } from '@angular/material/select/testing';
+import { apiErrorInterceptor } from '../../core/http/api-error.interceptor';
+import { NotificationService } from '../../core/notifications/notification.service';
 import { EmployeeDetail } from '../../core/models/employee.model';
 import { EmployeeProfileFormComponent } from './employee-profile-form.component';
 
@@ -28,7 +30,11 @@ describe('employee profile form', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [EmployeeProfileFormComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(withInterceptors([apiErrorInterceptor])),
+        provideHttpClientTesting(),
+        { provide: NotificationService, useValue: { notifyError: () => {} } },
+      ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(EmployeeProfileFormComponent);
@@ -92,6 +98,28 @@ describe('employee profile form', () => {
     await fixture.whenStable();
 
     expect(savedEmployees).toEqual([updated]);
+  });
+
+  it('ties a server-reported unknown manager id to the manager id input', async () => {
+    const saveButton = element().querySelector('button[type="submit"]') as HTMLButtonElement;
+    saveButton.click();
+
+    const request = httpTesting.expectOne('/api/employees/7');
+    request.flush(
+      { code: 'INVALID_REFERENCE', message: 'Manager 999 was not found', field: 'managerId' },
+      { status: 422, statusText: 'Unprocessable Entity' },
+    );
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const managerInput = element().querySelector(
+      'input[formcontrolname="managerId"]',
+    ) as HTMLInputElement;
+    const formField = managerInput.closest('mat-form-field') as HTMLElement;
+    const error = formField.querySelector('mat-error') as HTMLElement;
+
+    expect(error?.textContent).toContain('Manager 999 was not found');
+    expect(managerInput.getAttribute('aria-describedby')).toContain(error.id);
   });
 
   it('does not emit a cancelled profile update as a save', async () => {

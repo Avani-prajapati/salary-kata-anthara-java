@@ -5,7 +5,7 @@
   (profileUpdated)="onProfileUpdated($event)"
   (salaryChanged)="onSalaryChanged($event)"
 >
-<main class="directory" aria-labelledby="directory-heading">
+<main id="main-content" tabindex="-1" class="directory" aria-labelledby="directory-heading">
   <div class="directory-header">
     <h1 id="directory-heading">Employee directory</h1>
     <button mat-flat-button type="button" (click)="onAddEmployee()">Add employee</button>
@@ -106,6 +106,7 @@
         [attr.aria-label]="'View details for ' + employee.name"
         (click)="onRowSelected(employee, $event.currentTarget)"
         (keydown.enter)="onRowSelected(employee, $event.currentTarget)"
+        (keydown.space)="$event.preventDefault(); onRowSelected(employee, $event.currentTarget)"
       ></tr>
       <tr class="mat-mdc-row empty-row" *matNoDataRow>
         <td class="mat-mdc-cell empty-message" [attr.colspan]="displayedColumns.length">

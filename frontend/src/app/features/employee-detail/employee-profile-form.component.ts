@@ -14,6 +14,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { CountryNamePipe } from '../../core/formatting/country-name.pipe';
 import { EnumLabelPipe } from '../../core/formatting/enum-label.pipe';
+import { ApiError } from '../../core/http/api-error';
 import {
   COUNTRY_CODES,
   CountryCode,
@@ -84,11 +85,20 @@ export class EmployeeProfileFormComponent {
         this.saving.set(false);
         this.saved.emit(updated);
       },
-      error: () => this.saving.set(false),
+      error: (error: unknown) => {
+        this.saving.set(false);
+        this.applyServerFieldError(error);
+      },
     });
   }
 
   protected onCancel(): void {
     this.cancelled.emit();
+  }
+
+  private applyServerFieldError(error: unknown): void {
+    if (error instanceof ApiError && error.field === 'managerId') {
+      this.form.controls.managerId.setErrors({ server: error.message });
+    }
   }
 }

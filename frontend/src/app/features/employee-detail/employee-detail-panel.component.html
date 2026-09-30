@@ -1,5 +1,5 @@
 <mat-drawer-container class="detail-shell" [hasBackdrop]="true">
-  <mat-drawer-content>
+  <mat-drawer-content [attr.inert]="isOpen() ? true : null">
     <ng-content />
   </mat-drawer-content>
 

@@ -18,11 +18,7 @@ describe('SalaryHistoryListComponent', () => {
   });
 
   afterEach(() => {
-    try {
-      httpMock.verify();
-    } catch {
-      // allow cleanup errors
-    }
+    httpMock.verify();
   });
 
   it('loads single-entry history correctly', async () => {

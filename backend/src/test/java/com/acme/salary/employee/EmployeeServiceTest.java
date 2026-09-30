@@ -43,7 +43,7 @@ class EmployeeServiceTest {
     private final EmployeeService employeeService = new EmployeeService(employeeRepository, FIXED_CLOCK);
 
     @Test
-    void search_returns_each_employee_as_a_summary_with_salary_amount_and_currency() {
+    void employee_summaries_include_salary_amount_and_currency() {
         Employee janeIto = employee(7L, "Jane Ito", Department.ENGINEERING, JobLevel.SENIOR, "JP", Money.of(new BigDecimal("9800000.00"), "JPY"));
         when(employeeRepository.findAll(anySpecification(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(janeIto), PageRequest.of(0, 25), 1));
@@ -55,7 +55,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void search_reports_paging_metadata_for_the_requested_page() {
+    void requesting_a_page_returns_matching_paging_metadata() {
         when(employeeRepository.findAll(anySpecification(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(2, 25), 10_000));
 
@@ -68,7 +68,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void search_queries_the_repository_with_the_requested_page_and_size() {
+    void the_requested_page_and_size_are_passed_through_to_the_repository_query() {
         stubEmptyPage();
 
         employeeService.search(EmployeeSearchCriteria.unfiltered(), PageRequest.of(3, 50));
@@ -117,7 +117,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void getById_returns_full_detail_including_the_managers_name() {
+    void an_employees_detail_includes_their_managers_name() {
         Employee manager = employee(1L, "Priya Rao", Department.ENGINEERING, JobLevel.DIRECTOR, "IN", Money.of(new BigDecimal("18000000.00"), "INR"));
         Employee janeIto = employeeWithManager(7L, "Jane Ito", Department.ENGINEERING, JobLevel.SENIOR, "JP",
                 LocalDate.of(2021, 3, 15), 1L, Money.of(new BigDecimal("9800000.00"), "JPY"));
@@ -132,7 +132,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void getById_leaves_the_manager_name_null_when_the_employee_has_no_manager() {
+    void an_employee_without_a_manager_has_a_null_manager_name() {
         Employee janeIto = employee(7L, "Jane Ito", Department.ENGINEERING, JobLevel.SENIOR, "JP", Money.of(new BigDecimal("9800000.00"), "JPY"));
         when(employeeRepository.findById(7L)).thenReturn(Optional.of(janeIto));
 
@@ -143,7 +143,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void getById_throws_entity_not_found_for_a_missing_employee() {
+    void an_unknown_employee_id_reports_not_found() {
         when(employeeRepository.findById(404L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> employeeService.getById(404L))
@@ -152,7 +152,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void updateProfile_persists_every_editable_field_without_touching_the_current_salary() {
+    void editable_profile_fields_are_persisted_without_touching_the_current_salary() {
         Employee janeIto = employee(7L, "Jane Ito", Department.ENGINEERING, JobLevel.SENIOR, "JP", Money.of(new BigDecimal("9800000.00"), "JPY"));
         Employee priyaRao = employee(1L, "Priya Rao", Department.ENGINEERING, JobLevel.DIRECTOR, "IN", Money.of(new BigDecimal("18000000.00"), "INR"));
         when(employeeRepository.findById(7L)).thenReturn(Optional.of(janeIto));
@@ -170,7 +170,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void updateProfile_throws_entity_not_found_for_a_missing_employee() {
+    void a_profile_update_for_an_unknown_employee_reports_not_found() {
         when(employeeRepository.findById(404L)).thenReturn(Optional.empty());
         EmployeeProfileUpdateRequest request = new EmployeeProfileUpdateRequest(
                 Department.PRODUCT, JobLevel.LEAD, "US", LocalDate.of(2022, 5, 1), null);
@@ -180,7 +180,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void updateProfile_rejects_a_manager_id_that_does_not_exist_without_writing_anything() {
+    void assigning_a_nonexistent_manager_id_is_rejected_without_writing_anything() {
         Employee janeIto = employee(7L, "Jane Ito", Department.ENGINEERING, JobLevel.SENIOR, "JP", Money.of(new BigDecimal("9800000.00"), "JPY"));
         when(employeeRepository.findById(7L)).thenReturn(Optional.of(janeIto));
         when(employeeRepository.existsById(999L)).thenReturn(false);

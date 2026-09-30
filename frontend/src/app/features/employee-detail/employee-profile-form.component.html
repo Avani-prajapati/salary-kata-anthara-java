@@ -46,6 +46,9 @@
   <mat-form-field appearance="outline" subscriptSizing="dynamic">
     <mat-label>Manager id</mat-label>
     <input matInput type="number" formControlName="managerId" />
+    @if (form.controls.managerId.invalid) {
+      <mat-error>{{ form.controls.managerId.errors?.['server'] }}</mat-error>
+    }
   </mat-form-field>
 
   <div class="form-actions">
