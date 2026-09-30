@@ -86,3 +86,14 @@ export interface SalaryChangeRequest {
   currencyCode: string;
   effectiveDate: string;
 }
+
+export interface EmployeeCreateRequest {
+  name: string;
+  department: Department;
+  jobLevel: JobLevel;
+  countryCode: CountryCode;
+  hireDate: string;
+  managerId: number | null;
+  startingSalaryAmount: number;
+  startingSalaryCurrency: string;
+}

@@ -1,7 +1,9 @@
 package com.acme.salary.compensation;
 
 import com.acme.salary.common.error.EntityNotFoundException;
+import com.acme.salary.common.error.InvalidReferenceException;
 import com.acme.salary.common.money.Money;
+import com.acme.salary.compensation.dto.EmployeeCreateRequest;
 import com.acme.salary.compensation.dto.SalaryChangeRequest;
 import com.acme.salary.compensation.dto.SalaryHistoryEntryResponse;
 import com.acme.salary.employee.CountryCode;
@@ -9,6 +11,7 @@ import com.acme.salary.employee.Department;
 import com.acme.salary.employee.Employee;
 import com.acme.salary.employee.EmployeeRepository;
 import com.acme.salary.employee.JobLevel;
+import com.acme.salary.employee.dto.EmployeeSummaryResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -138,6 +141,67 @@ class CompensationServiceTest {
         assertThat(history.get(0).amount()).isEqualByComparingTo(new BigDecimal("100000.00"));
         assertThat(history.get(1).effectiveDate()).isEqualTo(LocalDate.of(2024, 1, 1));
         assertThat(history.get(1).amount()).isEqualByComparingTo(new BigDecimal("80000.00"));
+    }
+
+    @Test
+    void hireEmployee_creates_exactly_one_employee_and_one_matching_initial_history_row() {
+        LocalDate hireDate = LocalDate.of(2024, 6, 1);
+        EmployeeCreateRequest request = new EmployeeCreateRequest(
+                "New Hire", Department.ENGINEERING, JobLevel.ENTRY, "US", hireDate, null,
+                new BigDecimal("70000.00"), "USD");
+        when(employeeRepository.save(any(Employee.class))).thenAnswer(invocation -> {
+            Employee saved = invocation.getArgument(0);
+            ReflectionTestUtils.setField(saved, "id", 9L);
+            return saved;
+        });
+        when(salaryHistoryRepository.save(any(SalaryHistory.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        EmployeeSummaryResponse response = compensationService.hireEmployee(request);
+
+        assertThat(response.id()).isEqualTo(9L);
+        assertThat(response.name()).isEqualTo("New Hire");
+        assertThat(response.salaryAmount()).isEqualByComparingTo(new BigDecimal("70000.00"));
+        assertThat(response.salaryCurrency()).isEqualTo("USD");
+
+        ArgumentCaptor<Employee> savedEmployee = ArgumentCaptor.forClass(Employee.class);
+        verify(employeeRepository).save(savedEmployee.capture());
+        assertThat(savedEmployee.getValue().getCurrentSalary().amount()).isEqualByComparingTo(new BigDecimal("70000.00"));
+        assertThat(savedEmployee.getValue().getCurrentSalary().currencyCode()).isEqualTo("USD");
+
+        ArgumentCaptor<SalaryHistory> savedHistory = ArgumentCaptor.forClass(SalaryHistory.class);
+        verify(salaryHistoryRepository).save(savedHistory.capture());
+        assertThat(savedHistory.getValue().getEmployeeId()).isEqualTo(9L);
+        assertThat(savedHistory.getValue().getAmount()).isEqualByComparingTo(new BigDecimal("70000.00"));
+        assertThat(savedHistory.getValue().getCurrencyCode()).isEqualTo("USD");
+        assertThat(savedHistory.getValue().getEffectiveDate()).isEqualTo(hireDate);
+    }
+
+    @Test
+    void hireEmployee_rejects_a_zero_or_negative_starting_salary_before_any_row_is_written() {
+        EmployeeCreateRequest request = new EmployeeCreateRequest(
+                "New Hire", Department.ENGINEERING, JobLevel.ENTRY, "US",
+                LocalDate.of(2024, 6, 1), null, BigDecimal.ZERO, "USD");
+
+        assertThatThrownBy(() -> compensationService.hireEmployee(request))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(employeeRepository, never()).save(any());
+        verify(salaryHistoryRepository, never()).save(any());
+    }
+
+    @Test
+    void hireEmployee_rejects_an_unknown_manager_id() {
+        EmployeeCreateRequest request = new EmployeeCreateRequest(
+                "New Hire", Department.ENGINEERING, JobLevel.ENTRY, "US",
+                LocalDate.of(2024, 6, 1), 999L, new BigDecimal("70000.00"), "USD");
+        when(employeeRepository.existsById(999L)).thenReturn(false);
+
+        assertThatExceptionOfType(InvalidReferenceException.class)
+                .isThrownBy(() -> compensationService.hireEmployee(request))
+                .satisfies(exception -> assertThat(exception.field()).isEqualTo("managerId"));
+
+        verify(employeeRepository, never()).save(any());
+        verify(salaryHistoryRepository, never()).save(any());
     }
 
     @Test

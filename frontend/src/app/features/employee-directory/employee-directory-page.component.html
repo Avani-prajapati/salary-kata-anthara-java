@@ -6,7 +6,10 @@
   (salaryChanged)="onSalaryChanged($event)"
 >
 <main class="directory" aria-labelledby="directory-heading">
-  <h1 id="directory-heading">Employee directory</h1>
+  <div class="directory-header">
+    <h1 id="directory-heading">Employee directory</h1>
+    <button mat-flat-button type="button" (click)="onAddEmployee()">Add employee</button>
+  </div>
 
   <form class="filter-bar" [formGroup]="filters" role="search" aria-label="Filter employees">
     <mat-form-field class="name-search" appearance="outline" subscriptSizing="dynamic">

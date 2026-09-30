@@ -12,6 +12,13 @@ h1 {
   font: var(--mat-sys-headline-small);
 }
 
+.directory-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .filter-bar {
   display: flex;
   flex-wrap: wrap;

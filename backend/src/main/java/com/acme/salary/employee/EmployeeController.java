@@ -1,18 +1,23 @@
 package com.acme.salary.employee;
 
 import com.acme.salary.common.paging.PagedResponse;
+import com.acme.salary.compensation.CompensationService;
+import com.acme.salary.compensation.dto.EmployeeCreateRequest;
 import com.acme.salary.employee.dto.EmployeeDetailResponse;
 import com.acme.salary.employee.dto.EmployeeProfileUpdateRequest;
 import com.acme.salary.employee.dto.EmployeeSearchCriteria;
 import com.acme.salary.employee.dto.EmployeeSummaryResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
@@ -22,9 +27,11 @@ import java.util.Optional;
 public class EmployeeController {
 
     private final EmployeeService employeeService;
+    private final CompensationService compensationService;
 
-    public EmployeeController(EmployeeService employeeService) {
+    public EmployeeController(EmployeeService employeeService, CompensationService compensationService) {
         this.employeeService = employeeService;
+        this.compensationService = compensationService;
     }
 
     @GetMapping
@@ -50,5 +57,11 @@ public class EmployeeController {
     @PatchMapping("/{id}")
     public EmployeeDetailResponse updateProfile(@PathVariable Long id, @Valid @RequestBody EmployeeProfileUpdateRequest request) {
         return employeeService.updateProfile(id, request);
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public EmployeeSummaryResponse create(@Valid @RequestBody EmployeeCreateRequest request) {
+        return compensationService.hireEmployee(request);
     }
 }

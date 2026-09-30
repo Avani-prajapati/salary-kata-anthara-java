@@ -2,6 +2,8 @@ import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -12,6 +14,7 @@ import { catchError, debounceTime, map, Observable, of, switchMap } from 'rxjs';
 import { CountryNamePipe } from '../../core/formatting/country-name.pipe';
 import { EnumLabelPipe } from '../../core/formatting/enum-label.pipe';
 import { EmployeeDetailPanelComponent } from '../employee-detail/employee-detail-panel.component';
+import { AddEmployeeDialogComponent } from '../employee-onboarding/add-employee-dialog.component';
 import {
   COUNTRY_CODES,
   CountryCode,
@@ -54,6 +57,7 @@ const EMPTY_TABLE_MESSAGES: Record<SearchOutcome['kind'] | 'pending', string> = 
   imports: [
     ReactiveFormsModule,
     CurrencyPipe,
+    MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
@@ -71,6 +75,7 @@ const EMPTY_TABLE_MESSAGES: Record<SearchOutcome['kind'] | 'pending', string> = 
 export class EmployeeDirectoryPageComponent {
   private readonly directory = inject(EmployeeDirectoryService);
   private readonly formBuilder = inject(NonNullableFormBuilder);
+  private readonly dialog = inject(MatDialog);
 
   protected readonly departments = DEPARTMENTS;
   protected readonly jobLevels = JOB_LEVELS;
@@ -167,6 +172,21 @@ export class EmployeeDirectoryPageComponent {
 
   protected onSalaryChanged(updated: EmployeeDetail): void {
     this.overrideRow(updated);
+  }
+
+  protected onAddEmployee(): void {
+    this.dialog
+      .open(AddEmployeeDialogComponent, { width: '480px' })
+      .afterClosed()
+      .subscribe((created) => {
+        if (created) {
+          this.refreshCurrentSearch();
+        }
+      });
+  }
+
+  private refreshCurrentSearch(): void {
+    this.query.update((query) => ({ ...query }));
   }
 
   private overrideRow(updated: EmployeeDetail): void {

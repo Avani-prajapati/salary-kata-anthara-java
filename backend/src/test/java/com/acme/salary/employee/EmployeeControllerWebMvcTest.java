@@ -3,6 +3,8 @@ package com.acme.salary.employee;
 import com.acme.salary.common.error.EntityNotFoundException;
 import com.acme.salary.common.error.InvalidReferenceException;
 import com.acme.salary.common.paging.PagedResponse;
+import com.acme.salary.compensation.CompensationService;
+import com.acme.salary.compensation.dto.EmployeeCreateRequest;
 import com.acme.salary.employee.dto.EmployeeDetailResponse;
 import com.acme.salary.employee.dto.EmployeeProfileUpdateRequest;
 import com.acme.salary.employee.dto.EmployeeSearchCriteria;
@@ -31,6 +33,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -45,6 +48,9 @@ class EmployeeControllerWebMvcTest {
 
     @MockitoBean
     private EmployeeService employeeService;
+
+    @MockitoBean
+    private CompensationService compensationService;
 
     @Test
     void lists_employees_as_a_page_of_directory_rows() throws Exception {
@@ -214,6 +220,41 @@ class EmployeeControllerWebMvcTest {
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.code").value("INVALID_REFERENCE"))
                 .andExpect(jsonPath("$.field").value("managerId"));
+    }
+
+    @Test
+    void creates_an_employee_and_returns_the_directory_summary() throws Exception {
+        EmployeeCreateRequest request = new EmployeeCreateRequest(
+                "New Hire", Department.ENGINEERING, JobLevel.ENTRY, "US",
+                LocalDate.of(2024, 6, 1), null, new BigDecimal("70000.00"), "USD");
+        when(compensationService.hireEmployee(eq(request))).thenReturn(new EmployeeSummaryResponse(
+                9L, "New Hire", Department.ENGINEERING, JobLevel.ENTRY, "US", new BigDecimal("70000.00"), "USD"));
+
+        mockMvc.perform(post("/api/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(9))
+                .andExpect(jsonPath("$.name").value("New Hire"))
+                .andExpect(jsonPath("$.department").value("ENGINEERING"))
+                .andExpect(jsonPath("$.jobLevel").value("ENTRY"))
+                .andExpect(jsonPath("$.countryCode").value("US"))
+                .andExpect(jsonPath("$.salaryAmount").value(70000.00))
+                .andExpect(jsonPath("$.salaryCurrency").value("USD"));
+    }
+
+    @Test
+    void rejects_an_employee_creation_missing_required_fields() throws Exception {
+        String payload = """
+                {"name":"","department":null,"jobLevel":"ENTRY","countryCode":"US","hireDate":"2024-06-01","managerId":null,"startingSalaryAmount":70000.00,"startingSalaryCurrency":"USD"}
+                """;
+
+        mockMvc.perform(post("/api/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.errors[*].field").value(hasItems("name", "department")));
     }
 
     private void stubEmptyResult() {

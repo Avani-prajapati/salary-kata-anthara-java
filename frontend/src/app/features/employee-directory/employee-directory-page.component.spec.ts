@@ -7,13 +7,16 @@ import {
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HarnessLoader } from '@angular/cdk/testing';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatDialog } from '@angular/material/dialog';
 import { MatInputHarness } from '@angular/material/input/testing';
 import { MatPaginatorHarness } from '@angular/material/paginator/testing';
 import { MatSelectHarness } from '@angular/material/select/testing';
 import { MatSortHarness } from '@angular/material/sort/testing';
 import { MatTableHarness } from '@angular/material/table/testing';
+import { Subject } from 'rxjs';
 import { EmployeeSummary } from '../../core/models/employee.model';
 import { PagedResponse } from '../../core/models/paged-response.model';
+import { AddEmployeeDialogComponent } from '../employee-onboarding/add-employee-dialog.component';
 import { EmployeeDirectoryPageComponent } from './employee-directory-page.component';
 
 const JANE_ITO: EmployeeSummary = {
@@ -47,12 +50,18 @@ describe('employee directory page', () => {
   let fixture: ComponentFixture<EmployeeDirectoryPageComponent>;
   let httpTesting: HttpTestingController;
   let loader: HarnessLoader;
+  let dialogSpy: { open: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    dialogSpy = { open: vi.fn() };
     TestBed.configureTestingModule({
       imports: [EmployeeDirectoryPageComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: MatDialog, useValue: dialogSpy },
+      ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(EmployeeDirectoryPageComponent);
@@ -229,5 +238,57 @@ describe('employee directory page', () => {
     );
 
     expect(labels).toEqual(['Search by name', 'Department', 'Country', 'Job level']);
+  });
+
+  it('refreshes the directory under the currently active filters after adding an employee', async () => {
+    await respondWith(pageOf([JANE_ITO]));
+    await (
+      await loader.getHarness(MatSelectHarness.with({ selector: '[formControlName="department"]' }))
+    ).clickOptions({ text: 'Engineering' });
+    const filtered = await searchAfterFiltersSettle();
+    filtered.flush(pageOf([JANE_ITO]));
+
+    const afterClosed = new Subject<EmployeeSummary | undefined>();
+    dialogSpy.open.mockReturnValue({ afterClosed: () => afterClosed.asObservable() });
+    const addButton = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+    ).find((button) => button.textContent?.trim() === 'Add employee') as HTMLButtonElement;
+    addButton.click();
+
+    expect(dialogSpy.open).toHaveBeenCalledWith(AddEmployeeDialogComponent, expect.anything());
+
+    const newHire: EmployeeSummary = {
+      id: 9,
+      name: 'New Hire',
+      department: 'ENGINEERING',
+      jobLevel: 'ENTRY',
+      countryCode: 'US',
+      salaryAmount: 70000,
+      salaryCurrency: 'USD',
+    };
+    afterClosed.next(newHire);
+    afterClosed.complete();
+    await fixture.whenStable();
+
+    const refreshed = pendingSearch();
+    expect(refreshed.request.params.get('department')).toBe('ENGINEERING');
+    expect(refreshed.request.params.get('page')).toBe('0');
+    refreshed.flush(pageOf([JANE_ITO, newHire]));
+  });
+
+  it('does not refresh the directory when the add-employee dialog is cancelled', async () => {
+    await respondWith(pageOf([JANE_ITO]));
+    const afterClosed = new Subject<EmployeeSummary | undefined>();
+    dialogSpy.open.mockReturnValue({ afterClosed: () => afterClosed.asObservable() });
+    const addButton = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+    ).find((button) => button.textContent?.trim() === 'Add employee') as HTMLButtonElement;
+    addButton.click();
+
+    afterClosed.next(undefined);
+    afterClosed.complete();
+    await fixture.whenStable();
+
+    httpTesting.expectNone((request) => request.url === '/api/employees');
   });
 });

@@ -189,11 +189,11 @@ The HR manager onboards a new employee by entering their name, department, job t
 
 **Acceptance criteria**
 
-- [ ] **5.6.1** The "Add employee" form collects name, department, job title, country, hire date, manager (optional), starting salary amount, and currency.
-- [ ] **5.6.2** Name, department, job title, country, hire date, and starting salary are required; submitting without them surfaces field-level validation errors.
-- [ ] **5.6.3** Saving creates exactly one Employee record and exactly one initial SalaryHistory record sharing the same amount, currency, and effective date (the hire date).
-- [ ] **5.6.4** The new employee appears in the directory, subject to current filters and sort, immediately after saving.
-- [ ] **5.6.5** Submitting a starting salary of zero or less is rejected with a `422` Problem Details response, consistent with AC 5.4.2.
+- [x] **5.6.1** The "Add employee" form collects name, department, job title, country, hire date, manager (optional), starting salary amount, and currency.
+- [x] **5.6.2** Name, department, job title, country, hire date, and starting salary are required; submitting without them surfaces field-level validation errors.
+- [x] **5.6.3** Saving creates exactly one Employee record and exactly one initial SalaryHistory record sharing the same amount, currency, and effective date (the hire date).
+- [x] **5.6.4** The new employee appears in the directory, subject to current filters and sort, immediately after saving.
+- [x] **5.6.5** Submitting a starting salary of zero or less is rejected with a `422` Problem Details response, consistent with AC 5.4.2.
 
 ### 5.7 View organization-wide pay insights
 
