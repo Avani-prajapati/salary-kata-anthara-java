@@ -1,7 +1,12 @@
 # ACME Salary Management
 
 A web app for ACME's HR manager to browse, edit, and report on 10,000 employees' pay.
-See [`docs/specs/001-employee-salary-management-spec.md`](docs/specs/001-employee-salary-management-spec.md).
+
+- [`REQUIREMENTS.md`](REQUIREMENTS.md) — one-page goal, scope, and what's deliberately left out.
+- [`docs/specs/001-employee-salary-management-spec.md`](docs/specs/001-employee-salary-management-spec.md) — full requirements, architecture, and acceptance criteria.
+- [`docs/plans/001-employee-salary-management-plan.md`](docs/plans/001-employee-salary-management-plan.md) — the execution plan (structure, decisions, test strategy).
+- [`docs/AI-USAGE.md`](docs/AI-USAGE.md) — how this was built with AI (the agentic workflow, model-tier choices, review process).
+- [`docs/specs/001-employee-salary-management-verification.md`](docs/specs/001-employee-salary-management-verification.md) — browser-verification results and manual checklist.
 
 | Part | Stack |
 |---|---|
