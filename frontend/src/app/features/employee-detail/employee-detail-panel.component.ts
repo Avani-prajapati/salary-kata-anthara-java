@@ -3,7 +3,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
   input,
   output,
@@ -73,18 +72,17 @@ export class EmployeeDetailPanelComponent {
       .subscribe((outcome) => {
         this.state.set(outcome);
         this.mode.set('view');
+        if (outcome.kind !== 'idle') {
+          this.triggerElement()?.focus();
+          this.drawer().open();
+        }
       });
-
-    effect(() => {
-      if (this.isOpen()) {
-        this.triggerElement()?.focus();
-        this.drawer().open();
-      }
-    });
   }
 
   protected onOpenedChange(opened: boolean): void {
     if (!opened) {
+      const trigger = this.triggerElement();
+      setTimeout(() => trigger?.focus());
       this.closed.emit();
     }
   }

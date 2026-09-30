@@ -10,4 +10,9 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent {}
+export class AppComponent {
+  protected focusMainContent(event: Event): void {
+    event.preventDefault();
+    document.getElementById('main-content')?.focus();
+  }
+}
