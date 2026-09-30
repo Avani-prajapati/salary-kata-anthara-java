@@ -17,8 +17,10 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -122,7 +124,7 @@ class EmployeeRepositorySpecificationDataJpaTest {
 
     @Test
     void salary_amounts_round_trip_as_exact_decimals() {
-        List<EmployeeSummaryResponse> usEmployees = new EmployeeService(employeeRepository)
+        List<EmployeeSummaryResponse> usEmployees = employeeService()
                 .search(criteria().withCountry("US").build(), PageRequest.of(0, 25)).items();
 
         assertThat(usEmployees.getFirst().salaryAmount()).isEqualByComparingTo(new BigDecimal("105000.50"));
@@ -138,8 +140,12 @@ class EmployeeRepositorySpecificationDataJpaTest {
     }
 
     private List<String> searchNames(PageRequest pageRequest) {
-        return new EmployeeService(employeeRepository).search(EmployeeSearchCriteria.unfiltered(), pageRequest)
+        return employeeService().search(EmployeeSearchCriteria.unfiltered(), pageRequest)
                 .items().stream().map(EmployeeSummaryResponse::name).toList();
+    }
+
+    private EmployeeService employeeService() {
+        return new EmployeeService(employeeRepository, Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC));
     }
 
     private static Employee employee(String name, Department department, JobLevel jobLevel, String country, String amount, String currency) {

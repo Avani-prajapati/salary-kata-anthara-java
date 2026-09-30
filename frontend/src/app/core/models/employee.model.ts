@@ -65,3 +65,11 @@ export interface EmployeeDetail {
   salaryAmount: number;
   salaryCurrency: string;
 }
+
+export interface EmployeeProfileUpdateRequest {
+  department: Department;
+  jobLevel: JobLevel;
+  countryCode: CountryCode;
+  hireDate: string;
+  managerId: number | null;
+}

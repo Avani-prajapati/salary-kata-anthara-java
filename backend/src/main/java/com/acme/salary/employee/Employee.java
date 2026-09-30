@@ -111,4 +111,19 @@ public class Employee {
     public Instant getUpdatedAt() {
         return updatedAt;
     }
+
+    public void applyProfileUpdate(
+            Department department,
+            JobLevel jobLevel,
+            CountryCode country,
+            LocalDate hireDate,
+            Long managerId,
+            Instant updatedAt) {
+        this.department = department;
+        this.jobLevel = jobLevel;
+        this.countryCode = country.value();
+        this.hireDate = hireDate;
+        this.managerId = managerId;
+        this.updatedAt = updatedAt;
+    }
 }

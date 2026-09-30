@@ -17,6 +17,7 @@ import {
   CountryCode,
   Department,
   DEPARTMENTS,
+  EmployeeDetail,
   EmployeeSummary,
   JOB_LEVELS,
   JobLevel,
@@ -101,9 +102,14 @@ export class EmployeeDirectoryPageComponent {
     toObservable(this.query).pipe(switchMap((query) => this.search(query))),
   );
 
+  private readonly rowOverrides = signal<ReadonlyMap<number, EmployeeSummary>>(new Map());
+
   protected readonly pageIndex = computed(() => this.query().pageIndex);
   protected readonly pageSize = computed(() => this.query().pageSize);
-  protected readonly rows = computed(() => this.loadedResult()?.items ?? []);
+  protected readonly rows = computed(() => {
+    const overrides = this.rowOverrides();
+    return (this.loadedResult()?.items ?? []).map((row) => overrides.get(row.id) ?? row);
+  });
   protected readonly totalElements = computed(() => this.loadedResult()?.totalElements ?? 0);
   protected readonly emptyTableMessage = computed(
     () => EMPTY_TABLE_MESSAGES[this.outcome()?.kind ?? 'pending'],
@@ -153,6 +159,19 @@ export class EmployeeDirectoryPageComponent {
   protected onDetailPanelClosed(): void {
     this.selectedEmployeeId.set(null);
     this.selectedRow.set(null);
+  }
+
+  protected onProfileUpdated(updated: EmployeeDetail): void {
+    const row: EmployeeSummary = {
+      id: updated.id,
+      name: updated.name,
+      department: updated.department,
+      jobLevel: updated.jobLevel,
+      countryCode: updated.countryCode,
+      salaryAmount: updated.salaryAmount,
+      salaryCurrency: updated.salaryCurrency,
+    };
+    this.rowOverrides.update((overrides) => new Map(overrides).set(row.id, row));
   }
 
   private loadedResult(): PagedResponse<EmployeeSummary> | undefined {

@@ -1,16 +1,20 @@
 package com.acme.salary.employee;
 
 import com.acme.salary.common.error.EntityNotFoundException;
+import com.acme.salary.common.error.InvalidReferenceException;
 import com.acme.salary.common.paging.PagedResponse;
 import com.acme.salary.employee.dto.EmployeeDetailResponse;
+import com.acme.salary.employee.dto.EmployeeProfileUpdateRequest;
 import com.acme.salary.employee.dto.EmployeeSearchCriteria;
 import com.acme.salary.employee.dto.EmployeeSummaryResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -20,10 +24,13 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasItems;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,6 +39,9 @@ class EmployeeControllerWebMvcTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockitoBean
     private EmployeeService employeeService;
@@ -154,6 +164,56 @@ class EmployeeControllerWebMvcTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("NOT_FOUND"))
                 .andExpect(jsonPath("$.message").value("Employee 404 was not found"));
+    }
+
+    @Test
+    void updates_the_profile_and_returns_the_updated_detail() throws Exception {
+        EmployeeProfileUpdateRequest request = new EmployeeProfileUpdateRequest(
+                Department.PRODUCT, JobLevel.LEAD, "US", LocalDate.of(2022, 5, 1), 1L);
+        when(employeeService.updateProfile(eq(7L), eq(request))).thenReturn(new EmployeeDetailResponse(
+                7L, "Jane Ito", Department.PRODUCT, JobLevel.LEAD, "US",
+                LocalDate.of(2022, 5, 1), 1L, "Priya Rao", new BigDecimal("9800000.00"), "JPY"));
+
+        mockMvc.perform(patch("/api/employees/7")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.department").value("PRODUCT"))
+                .andExpect(jsonPath("$.jobLevel").value("LEAD"))
+                .andExpect(jsonPath("$.countryCode").value("US"))
+                .andExpect(jsonPath("$.hireDate").value("2022-05-01"))
+                .andExpect(jsonPath("$.managerId").value(1))
+                .andExpect(jsonPath("$.salaryAmount").value(9800000.00))
+                .andExpect(jsonPath("$.salaryCurrency").value("JPY"));
+    }
+
+    @Test
+    void rejects_a_profile_update_with_blank_required_fields() throws Exception {
+        String payload = """
+                {"department":null,"jobLevel":"LEAD","countryCode":"","hireDate":"2022-05-01","managerId":null}
+                """;
+
+        mockMvc.perform(patch("/api/employees/7")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.errors[*].field").value(hasItems("department", "countryCode")));
+    }
+
+    @Test
+    void rejects_a_profile_update_naming_an_unknown_manager_id() throws Exception {
+        EmployeeProfileUpdateRequest request = new EmployeeProfileUpdateRequest(
+                Department.PRODUCT, JobLevel.LEAD, "US", LocalDate.of(2022, 5, 1), 999L);
+        when(employeeService.updateProfile(eq(7L), eq(request)))
+                .thenThrow(new InvalidReferenceException("managerId", "Employee 999 was not found"));
+
+        mockMvc.perform(patch("/api/employees/7")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("INVALID_REFERENCE"))
+                .andExpect(jsonPath("$.field").value("managerId"));
     }
 
     private void stubEmptyResult() {

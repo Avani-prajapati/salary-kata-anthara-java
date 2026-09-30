@@ -130,11 +130,11 @@ From the detail panel, the HR manager edits an employee's department, job title,
 
 **Acceptance criteria**
 
-- [ ] **5.3.1** The HR manager can edit department, job title, country, hire date, and manager from the detail panel's edit mode.
-- [ ] **5.3.2** Required fields (department, job title, country, hire date) cannot be saved blank; the form surfaces field-level validation errors tied to their inputs.
-- [ ] **5.3.3** An invalid manager reference (an employee id that does not exist) is rejected with a `422` Problem Details response naming the invalid field.
-- [ ] **5.3.4** Saving a valid edit updates the employee and reflects the change in the directory table and detail panel without a full page reload.
-- [ ] **5.3.5** The salary field is read-only in this flow; it never changes here, only through slice 5.4.
+- [x] **5.3.1** The HR manager can edit department, job title, country, hire date, and manager from the detail panel's edit mode.
+- [x] **5.3.2** Required fields (department, job title, country, hire date) cannot be saved blank; the form surfaces field-level validation errors tied to their inputs.
+- [x] **5.3.3** An invalid manager reference (an employee id that does not exist) is rejected with a `422` Problem Details response naming the invalid field.
+- [x] **5.3.4** Saving a valid edit updates the employee and reflects the change in the directory table and detail panel without a full page reload.
+- [x] **5.3.5** The salary field is read-only in this flow; it never changes here, only through slice 5.4.
 
 ### 5.4 Change an employee's salary
 

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { EmployeeDetail } from '../../core/models/employee.model';
+import { EmployeeDetail, EmployeeProfileUpdateRequest } from '../../core/models/employee.model';
 
 @Injectable({ providedIn: 'root' })
 export class EmployeeDetailService {
@@ -9,5 +9,9 @@ export class EmployeeDetailService {
 
   getById(id: number): Observable<EmployeeDetail> {
     return this.http.get<EmployeeDetail>(`/api/employees/${id}`);
+  }
+
+  updateProfile(id: number, request: EmployeeProfileUpdateRequest): Observable<EmployeeDetail> {
+    return this.http.patch<EmployeeDetail>(`/api/employees/${id}`, request);
   }
 }

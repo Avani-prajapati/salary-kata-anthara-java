@@ -1,8 +1,10 @@
 package com.acme.salary.employee;
 
 import com.acme.salary.common.error.EntityNotFoundException;
+import com.acme.salary.common.error.InvalidReferenceException;
 import com.acme.salary.common.paging.PagedResponse;
 import com.acme.salary.employee.dto.EmployeeDetailResponse;
+import com.acme.salary.employee.dto.EmployeeProfileUpdateRequest;
 import com.acme.salary.employee.dto.EmployeeSearchCriteria;
 import com.acme.salary.employee.dto.EmployeeSummaryResponse;
 import org.springframework.data.domain.PageRequest;
@@ -11,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.util.Map;
 import java.util.Optional;
 
@@ -29,9 +32,11 @@ public class EmployeeService {
     private static final Sort STABLE_TIEBREAKER = Sort.by("id");
 
     private final EmployeeRepository employeeRepository;
+    private final Clock clock;
 
-    public EmployeeService(EmployeeRepository employeeRepository) {
+    public EmployeeService(EmployeeRepository employeeRepository, Clock clock) {
         this.employeeRepository = employeeRepository;
+        this.clock = clock;
     }
 
     public PagedResponse<EmployeeSummaryResponse> search(EmployeeSearchCriteria criteria, Pageable pageable) {
@@ -58,6 +63,24 @@ public class EmployeeService {
         Employee employee = findByIdOrThrow(id);
         String managerName = findManagerName(employee.getManagerId());
         return EmployeeDetailResponse.from(employee, managerName);
+    }
+
+    @Transactional
+    public EmployeeDetailResponse updateProfile(Long id, EmployeeProfileUpdateRequest request) {
+        Employee employee = findByIdOrThrow(id);
+        Long managerId = request.managerId();
+        if (managerId != null && !employeeRepository.existsById(managerId)) {
+            throw new InvalidReferenceException("managerId", "Employee " + managerId + " was not found");
+        }
+        employee.applyProfileUpdate(
+                request.department(),
+                request.jobLevel(),
+                CountryCode.of(request.countryCode()),
+                request.hireDate(),
+                managerId,
+                clock.instant());
+        employeeRepository.save(employee);
+        return EmployeeDetailResponse.from(employee, findManagerName(employee.getManagerId()));
     }
 
     private Employee findByIdOrThrow(Long id) {

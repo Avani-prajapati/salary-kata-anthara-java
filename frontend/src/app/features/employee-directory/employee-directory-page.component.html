@@ -2,6 +2,7 @@
   [employeeId]="selectedEmployeeId()"
   [triggerElement]="selectedRow()"
   (closed)="onDetailPanelClosed()"
+  (profileUpdated)="onProfileUpdated($event)"
 >
 <main class="directory" aria-labelledby="directory-heading">
   <h1 id="directory-heading">Employee directory</h1>

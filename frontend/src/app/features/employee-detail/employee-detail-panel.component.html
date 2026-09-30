@@ -28,30 +28,39 @@
 
     @if (state(); as current) {
       @if (current.kind === 'loaded') {
-        <dl class="detail-fields">
-          <dt>Department</dt>
-          <dd>{{ current.employee.department | enumLabel }}</dd>
+        @if (mode() === 'edit') {
+          <app-employee-profile-form
+            [employee]="current.employee"
+            (saved)="onProfileSaved($event)"
+            (cancelled)="cancelEditing()"
+          />
+        } @else {
+          <dl class="detail-fields">
+            <dt>Department</dt>
+            <dd>{{ current.employee.department | enumLabel }}</dd>
 
-          <dt>Job level</dt>
-          <dd>{{ current.employee.jobLevel | enumLabel }}</dd>
+            <dt>Job level</dt>
+            <dd>{{ current.employee.jobLevel | enumLabel }}</dd>
 
-          <dt>Country</dt>
-          <dd>{{ current.employee.countryCode | countryName }}</dd>
+            <dt>Country</dt>
+            <dd>{{ current.employee.countryCode | countryName }}</dd>
 
-          <dt>Hire date</dt>
-          <dd>{{ current.employee.hireDate }}</dd>
+            <dt>Hire date</dt>
+            <dd>{{ current.employee.hireDate }}</dd>
 
-          <dt>Manager</dt>
-          <dd>{{ current.employee.managerName ?? 'None' }}</dd>
+            <dt>Manager</dt>
+            <dd>{{ current.employee.managerName ?? 'None' }}</dd>
 
-          <dt>Current salary</dt>
-          <dd>
-            {{
-              current.employee.salaryAmount
-                | currency: current.employee.salaryCurrency : 'symbol' : '1.0-2'
-            }}
-          </dd>
-        </dl>
+            <dt>Current salary</dt>
+            <dd>
+              {{
+                current.employee.salaryAmount
+                  | currency: current.employee.salaryCurrency : 'symbol' : '1.0-2'
+              }}
+            </dd>
+          </dl>
+          <button mat-button type="button" (click)="startEditing()">Edit profile</button>
+        }
       }
     }
   </mat-drawer>
