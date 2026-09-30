@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.util.List;
 
 @Service
 public class CompensationService {
@@ -39,6 +40,14 @@ public class CompensationService {
                 .orElseThrow(() -> new IllegalStateException("Employee " + employeeId + " has no salary history"));
         employee.recordSalaryChange(Money.of(current.getAmount(), current.getCurrencyCode()), clock.instant());
         employeeRepository.save(employee);
+    }
+
+    public List<SalaryHistoryEntryResponse> listHistory(Long employeeId) {
+        findEmployeeOrThrow(employeeId);
+        return salaryHistoryRepository.findByEmployeeIdOrderByEffectiveDateDesc(employeeId)
+                .stream()
+                .map(SalaryHistoryEntryResponse::from)
+                .toList();
     }
 
     private Employee findEmployeeOrThrow(Long employeeId) {

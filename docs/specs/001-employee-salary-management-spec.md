@@ -176,10 +176,10 @@ The HR manager reviews every past salary change for an employee — amount, curr
 
 **Acceptance criteria**
 
-- [ ] **5.5.1** The History tab lists every SalaryHistory record for the employee, newest effective date first.
-- [ ] **5.5.2** Each history row shows amount, currency, effective date, and recorded-at timestamp.
-- [ ] **5.5.3** A brand-new employee (one salary-history record, created at hire) shows that single record rather than an empty or error state.
-- [ ] **5.5.4** History is read-only here — no edit or delete affordance exists.
+- [x] **5.5.1** The History tab lists every SalaryHistory record for the employee, newest effective date first.
+- [x] **5.5.2** Each history row shows amount, currency, effective date, and recorded-at timestamp.
+- [x] **5.5.3** A brand-new employee (one salary-history record, created at hire) shows that single record rather than an empty or error state.
+- [x] **5.5.4** History is read-only here — no edit or delete affordance exists.
 
 ### 5.6 Add a new employee
 

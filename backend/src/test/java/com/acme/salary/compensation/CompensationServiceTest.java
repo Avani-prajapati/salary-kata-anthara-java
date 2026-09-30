@@ -109,6 +109,38 @@ class CompensationServiceTest {
     }
 
     @Test
+    void listHistory_returns_a_single_record_for_a_brand_new_employee() {
+        when(employeeRepository.findById(3L)).thenReturn(Optional.of(employee(3L, Money.of(new BigDecimal("50000.00"), "USD"))));
+        SalaryHistory singleEntry = new SalaryHistory(
+                3L, Money.of(new BigDecimal("50000.00"), "USD"), LocalDate.of(2024, 1, 1), Instant.parse("2024-01-01T00:00:00Z"));
+        when(salaryHistoryRepository.findByEmployeeIdOrderByEffectiveDateDesc(3L)).thenReturn(Arrays.asList(singleEntry));
+
+        java.util.List<SalaryHistoryEntryResponse> history = compensationService.listHistory(3L);
+
+        assertThat(history).hasSize(1);
+        assertThat(history.get(0).amount()).isEqualByComparingTo(new BigDecimal("50000.00"));
+        assertThat(history.get(0).currencyCode()).isEqualTo("USD");
+    }
+
+    @Test
+    void listHistory_returns_multiple_records_in_newest_effective_date_first_order() {
+        when(employeeRepository.findById(7L)).thenReturn(Optional.of(employee(7L, Money.of(new BigDecimal("100000.00"), "USD"))));
+        SalaryHistory earlier = new SalaryHistory(
+                7L, Money.of(new BigDecimal("80000.00"), "USD"), LocalDate.of(2024, 1, 1), Instant.parse("2024-01-01T00:00:00Z"));
+        SalaryHistory later = new SalaryHistory(
+                7L, Money.of(new BigDecimal("100000.00"), "USD"), LocalDate.of(2024, 6, 1), Instant.parse("2024-06-01T00:00:00Z"));
+        when(salaryHistoryRepository.findByEmployeeIdOrderByEffectiveDateDesc(7L)).thenReturn(Arrays.asList(later, earlier));
+
+        java.util.List<SalaryHistoryEntryResponse> history = compensationService.listHistory(7L);
+
+        assertThat(history).hasSize(2);
+        assertThat(history.get(0).effectiveDate()).isEqualTo(LocalDate.of(2024, 6, 1));
+        assertThat(history.get(0).amount()).isEqualByComparingTo(new BigDecimal("100000.00"));
+        assertThat(history.get(1).effectiveDate()).isEqualTo(LocalDate.of(2024, 1, 1));
+        assertThat(history.get(1).amount()).isEqualByComparingTo(new BigDecimal("80000.00"));
+    }
+
+    @Test
     void salary_history_repository_declares_no_custom_update_or_delete_method() {
         var declaredMethodNames = Arrays.stream(SalaryHistoryRepository.class.getDeclaredMethods())
                 .map(Method::getName)

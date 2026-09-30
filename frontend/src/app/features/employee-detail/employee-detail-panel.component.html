@@ -40,6 +40,9 @@
             (saved)="onSalarySaved()"
             (cancelled)="returnToView()"
           />
+        } @else if (mode() === 'history') {
+          <button mat-button type="button" (click)="returnToView()" class="history-back-button">← Back</button>
+          <app-salary-history-list [employeeId]="current.employee.id" />
         } @else {
           <dl class="detail-fields">
             <dt>Department</dt>
@@ -68,6 +71,7 @@
           <div class="detail-actions">
             <button mat-button type="button" (click)="startEditing()">Edit profile</button>
             <button mat-button type="button" (click)="startChangingSalary()">Change salary</button>
+            <button mat-button type="button" (click)="startViewingHistory()">History</button>
           </div>
         }
       }

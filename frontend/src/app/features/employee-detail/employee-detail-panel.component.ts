@@ -20,6 +20,7 @@ import { EmployeeDetail } from '../../core/models/employee.model';
 import { EmployeeDetailService } from './employee-detail.service';
 import { EmployeeProfileFormComponent } from './employee-profile-form.component';
 import { SalaryChangeFormComponent } from './salary/salary-change-form.component';
+import { SalaryHistoryListComponent } from './salary/salary-history-list.component';
 
 type PanelState =
   | { kind: 'idle' }
@@ -27,7 +28,7 @@ type PanelState =
   | { kind: 'loaded'; employee: EmployeeDetail }
   | { kind: 'not-found' };
 
-type PanelMode = 'view' | 'edit' | 'salary';
+type PanelMode = 'view' | 'edit' | 'salary' | 'history';
 
 @Component({
   selector: 'app-employee-detail-panel',
@@ -39,6 +40,7 @@ type PanelMode = 'view' | 'edit' | 'salary';
     CountryNamePipe,
     EmployeeProfileFormComponent,
     SalaryChangeFormComponent,
+    SalaryHistoryListComponent,
   ],
   templateUrl: './employee-detail-panel.component.html',
   styleUrl: './employee-detail-panel.component.scss',
@@ -93,6 +95,10 @@ export class EmployeeDetailPanelComponent {
 
   protected startChangingSalary(): void {
     this.mode.set('salary');
+  }
+
+  protected startViewingHistory(): void {
+    this.mode.set('history');
   }
 
   protected returnToView(): void {

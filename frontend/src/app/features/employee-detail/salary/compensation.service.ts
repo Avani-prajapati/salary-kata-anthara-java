@@ -10,4 +10,8 @@ export class CompensationService {
   changeSalary(employeeId: number, request: SalaryChangeRequest): Observable<SalaryHistoryEntry> {
     return this.http.post<SalaryHistoryEntry>(`/api/employees/${employeeId}/salary-changes`, request);
   }
+
+  listHistory(employeeId: number): Observable<SalaryHistoryEntry[]> {
+    return this.http.get<SalaryHistoryEntry[]>(`/api/employees/${employeeId}/salary-history`);
+  }
 }

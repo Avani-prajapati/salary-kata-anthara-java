@@ -14,9 +14,13 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
+import java.util.List;
+
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -74,5 +78,24 @@ class CompensationControllerWebMvcTest {
                         .content(payload))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errors[*].field").value(hasItem("effectiveDate")));
+    }
+
+    @Test
+    void lists_salary_history_in_ordered_form() throws Exception {
+        List<SalaryHistoryEntryResponse> history = List.of(
+                new SalaryHistoryEntryResponse(new BigDecimal("100000.00"), "USD", LocalDate.of(2024, 6, 1), Instant.parse("2024-06-01T00:00:00Z")),
+                new SalaryHistoryEntryResponse(new BigDecimal("80000.00"), "USD", LocalDate.of(2024, 1, 1), Instant.parse("2024-01-01T00:00:00Z"))
+        );
+        when(compensationService.listHistory(eq(7L))).thenReturn(history);
+
+        mockMvc.perform(get("/api/employees/7/salary-history"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].amount").value(100000.00))
+                .andExpect(jsonPath("$[0].currencyCode").value("USD"))
+                .andExpect(jsonPath("$[0].effectiveDate").value("2024-06-01"))
+                .andExpect(jsonPath("$[0].recordedAt").value("2024-06-01T00:00:00Z"))
+                .andExpect(jsonPath("$[1].amount").value(80000.00))
+                .andExpect(jsonPath("$[1].effectiveDate").value("2024-01-01"));
     }
 }
