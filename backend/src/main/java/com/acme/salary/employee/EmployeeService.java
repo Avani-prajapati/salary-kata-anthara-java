@@ -1,6 +1,8 @@
 package com.acme.salary.employee;
 
+import com.acme.salary.common.error.EntityNotFoundException;
 import com.acme.salary.common.paging.PagedResponse;
+import com.acme.salary.employee.dto.EmployeeDetailResponse;
 import com.acme.salary.employee.dto.EmployeeSearchCriteria;
 import com.acme.salary.employee.dto.EmployeeSummaryResponse;
 import org.springframework.data.domain.PageRequest;
@@ -50,5 +52,23 @@ public class EmployeeService {
         String property = Optional.ofNullable(SORTABLE_PROPERTIES.get(order.getProperty()))
                 .orElseThrow(() -> new IllegalArgumentException("Unsupported sort property: " + order.getProperty()));
         return new Sort.Order(order.getDirection(), property);
+    }
+
+    public EmployeeDetailResponse getById(Long id) {
+        Employee employee = findByIdOrThrow(id);
+        String managerName = findManagerName(employee.getManagerId());
+        return EmployeeDetailResponse.from(employee, managerName);
+    }
+
+    private Employee findByIdOrThrow(Long id) {
+        return employeeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Employee", id));
+    }
+
+    private String findManagerName(Long managerId) {
+        return Optional.ofNullable(managerId)
+                .flatMap(employeeRepository::findById)
+                .map(Employee::getName)
+                .orElse(null);
     }
 }

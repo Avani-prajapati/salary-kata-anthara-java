@@ -52,3 +52,16 @@ export interface EmployeeSummary {
   salaryAmount: number;
   salaryCurrency: string;
 }
+
+export interface EmployeeDetail {
+  id: number;
+  name: string;
+  department: Department;
+  jobLevel: JobLevel;
+  countryCode: CountryCode;
+  hireDate: string;
+  managerId: number | null;
+  managerName: string | null;
+  salaryAmount: number;
+  salaryCurrency: string;
+}

@@ -116,11 +116,11 @@ Clicking any row in the directory opens a side-panel drawer showing that employe
 
 **Acceptance criteria**
 
-- [ ] **5.2.1** Clicking a directory row opens the detail side-panel for that employee, preserving the directory's current page, sort, and filters underneath.
-- [ ] **5.2.2** The detail panel shows every core employee field: name, department, job title, country, hire date, manager, current salary + currency.
-- [ ] **5.2.3** Closing the panel, via a close control or Escape, returns keyboard focus to the row that opened it.
-- [ ] **5.2.4** The panel traps keyboard focus while open and restores it to the trigger on close.
-- [ ] **5.2.5** Requesting a non-existent employee id returns a `404` Problem Details response with a `code` and `message`, and the UI surfaces a "not found" message.
+- [x] **5.2.1** Clicking a directory row opens the detail side-panel for that employee, preserving the directory's current page, sort, and filters underneath.
+- [x] **5.2.2** The detail panel shows every core employee field: name, department, job title, country, hire date, manager, current salary + currency.
+- [x] **5.2.3** Closing the panel, via a close control or Escape, returns keyboard focus to the row that opened it.
+- [x] **5.2.4** The panel traps keyboard focus while open and restores it to the trigger on close.
+- [x] **5.2.5** Requesting a non-existent employee id returns a `404` Problem Details response with a `code` and `message`, and the UI surfaces a "not found" message.
 
 ### 5.3 Edit an employee's profile
 

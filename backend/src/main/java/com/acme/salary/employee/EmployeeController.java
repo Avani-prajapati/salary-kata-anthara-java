@@ -1,10 +1,12 @@
 package com.acme.salary.employee;
 
 import com.acme.salary.common.paging.PagedResponse;
+import com.acme.salary.employee.dto.EmployeeDetailResponse;
 import com.acme.salary.employee.dto.EmployeeSearchCriteria;
 import com.acme.salary.employee.dto.EmployeeSummaryResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,5 +36,10 @@ public class EmployeeController {
                 countryCode.map(CountryCode::of).map(CountryCode::value),
                 jobLevel);
         return employeeService.search(criteria, pageable);
+    }
+
+    @GetMapping("/{id}")
+    public EmployeeDetailResponse getById(@PathVariable Long id) {
+        return employeeService.getById(id);
     }
 }

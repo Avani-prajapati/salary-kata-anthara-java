@@ -1,6 +1,8 @@
 package com.acme.salary.employee;
 
+import com.acme.salary.common.error.EntityNotFoundException;
 import com.acme.salary.common.paging.PagedResponse;
+import com.acme.salary.employee.dto.EmployeeDetailResponse;
 import com.acme.salary.employee.dto.EmployeeSearchCriteria;
 import com.acme.salary.employee.dto.EmployeeSummaryResponse;
 import org.junit.jupiter.api.Test;
@@ -13,6 +15,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -121,6 +124,36 @@ class EmployeeControllerWebMvcTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("BAD_REQUEST"))
                 .andExpect(jsonPath("$.message").isNotEmpty());
+    }
+
+    @Test
+    void returns_the_full_detail_for_an_existing_employee() throws Exception {
+        when(employeeService.getById(7L)).thenReturn(new EmployeeDetailResponse(
+                7L, "Jane Ito", Department.ENGINEERING, JobLevel.SENIOR, "JP",
+                LocalDate.of(2021, 3, 15), 1L, "Priya Rao", new BigDecimal("9800000.00"), "JPY"));
+
+        mockMvc.perform(get("/api/employees/7"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(7))
+                .andExpect(jsonPath("$.name").value("Jane Ito"))
+                .andExpect(jsonPath("$.department").value("ENGINEERING"))
+                .andExpect(jsonPath("$.jobLevel").value("SENIOR"))
+                .andExpect(jsonPath("$.countryCode").value("JP"))
+                .andExpect(jsonPath("$.hireDate").value("2021-03-15"))
+                .andExpect(jsonPath("$.managerId").value(1))
+                .andExpect(jsonPath("$.managerName").value("Priya Rao"))
+                .andExpect(jsonPath("$.salaryAmount").value(9800000.00))
+                .andExpect(jsonPath("$.salaryCurrency").value("JPY"));
+    }
+
+    @Test
+    void returns_a_not_found_problem_detail_for_a_missing_employee() throws Exception {
+        when(employeeService.getById(404L)).thenThrow(new EntityNotFoundException("Employee", 404L));
+
+        mockMvc.perform(get("/api/employees/404"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Employee 404 was not found"));
     }
 
     private void stubEmptyResult() {

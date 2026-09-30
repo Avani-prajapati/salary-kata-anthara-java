@@ -1,7 +1,9 @@
 package com.acme.salary.employee;
 
+import com.acme.salary.common.error.EntityNotFoundException;
 import com.acme.salary.common.money.Money;
 import com.acme.salary.common.paging.PagedResponse;
+import com.acme.salary.employee.dto.EmployeeDetailResponse;
 import com.acme.salary.employee.dto.EmployeeSearchCriteria;
 import com.acme.salary.employee.dto.EmployeeSummaryResponse;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -105,6 +108,41 @@ class EmployeeServiceTest {
                 .hasMessageContaining("managerId");
     }
 
+    @Test
+    void getById_returns_full_detail_including_the_managers_name() {
+        Employee manager = employee(1L, "Priya Rao", Department.ENGINEERING, JobLevel.DIRECTOR, "IN", Money.of(new BigDecimal("18000000.00"), "INR"));
+        Employee janeIto = employeeWithManager(7L, "Jane Ito", Department.ENGINEERING, JobLevel.SENIOR, "JP",
+                LocalDate.of(2021, 3, 15), 1L, Money.of(new BigDecimal("9800000.00"), "JPY"));
+        when(employeeRepository.findById(7L)).thenReturn(Optional.of(janeIto));
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(manager));
+
+        EmployeeDetailResponse detail = employeeService.getById(7L);
+
+        assertThat(detail).isEqualTo(new EmployeeDetailResponse(
+                7L, "Jane Ito", Department.ENGINEERING, JobLevel.SENIOR, "JP",
+                LocalDate.of(2021, 3, 15), 1L, "Priya Rao", new BigDecimal("9800000.00"), "JPY"));
+    }
+
+    @Test
+    void getById_leaves_the_manager_name_null_when_the_employee_has_no_manager() {
+        Employee janeIto = employee(7L, "Jane Ito", Department.ENGINEERING, JobLevel.SENIOR, "JP", Money.of(new BigDecimal("9800000.00"), "JPY"));
+        when(employeeRepository.findById(7L)).thenReturn(Optional.of(janeIto));
+
+        EmployeeDetailResponse detail = employeeService.getById(7L);
+
+        assertThat(detail.managerId()).isNull();
+        assertThat(detail.managerName()).isNull();
+    }
+
+    @Test
+    void getById_throws_entity_not_found_for_a_missing_employee() {
+        when(employeeRepository.findById(404L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> employeeService.getById(404L))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("404");
+    }
+
     private void stubEmptyPage() {
         when(employeeRepository.findAll(anySpecification(), any(Pageable.class))).thenReturn(Page.empty());
     }
@@ -122,6 +160,14 @@ class EmployeeServiceTest {
 
     private static Employee employee(Long id, String name, Department department, JobLevel jobLevel, String country, Money salary) {
         Employee employee = new Employee(name, department, jobLevel, CountryCode.of(country), LocalDate.of(2020, 1, 1), null, salary, Instant.EPOCH);
+        ReflectionTestUtils.setField(employee, "id", id);
+        return employee;
+    }
+
+    private static Employee employeeWithManager(
+            Long id, String name, Department department, JobLevel jobLevel, String country,
+            LocalDate hireDate, Long managerId, Money salary) {
+        Employee employee = new Employee(name, department, jobLevel, CountryCode.of(country), hireDate, managerId, salary, Instant.EPOCH);
         ReflectionTestUtils.setField(employee, "id", id);
         return employee;
     }

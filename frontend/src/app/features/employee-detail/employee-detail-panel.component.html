@@ -1,0 +1,58 @@
+<mat-drawer-container class="detail-shell" [hasBackdrop]="true">
+  <mat-drawer-content>
+    <ng-content />
+  </mat-drawer-content>
+
+  <mat-drawer
+    mode="over"
+    position="end"
+    class="detail-drawer"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="panelTitleId"
+    autoFocus="first-tabbable"
+    (openedChange)="onOpenedChange($event)"
+  >
+    <div class="detail-drawer-header">
+      <h2 [id]="panelTitleId">{{ panelTitle() }}</h2>
+      <button mat-button type="button" (click)="drawer().close()">Close</button>
+    </div>
+
+    @if (state().kind === 'loading') {
+      <p>Loading employee…</p>
+    }
+
+    @if (state().kind === 'not-found') {
+      <p>This employee could not be found. They may have been removed.</p>
+    }
+
+    @if (state(); as current) {
+      @if (current.kind === 'loaded') {
+        <dl class="detail-fields">
+          <dt>Department</dt>
+          <dd>{{ current.employee.department | enumLabel }}</dd>
+
+          <dt>Job level</dt>
+          <dd>{{ current.employee.jobLevel | enumLabel }}</dd>
+
+          <dt>Country</dt>
+          <dd>{{ current.employee.countryCode | countryName }}</dd>
+
+          <dt>Hire date</dt>
+          <dd>{{ current.employee.hireDate }}</dd>
+
+          <dt>Manager</dt>
+          <dd>{{ current.employee.managerName ?? 'None' }}</dd>
+
+          <dt>Current salary</dt>
+          <dd>
+            {{
+              current.employee.salaryAmount
+                | currency: current.employee.salaryCurrency : 'symbol' : '1.0-2'
+            }}
+          </dd>
+        </dl>
+      }
+    }
+  </mat-drawer>
+</mat-drawer-container>

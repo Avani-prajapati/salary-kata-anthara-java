@@ -11,6 +11,7 @@ import { MatTableModule } from '@angular/material/table';
 import { catchError, debounceTime, map, Observable, of, switchMap } from 'rxjs';
 import { CountryNamePipe } from '../../core/formatting/country-name.pipe';
 import { EnumLabelPipe } from '../../core/formatting/enum-label.pipe';
+import { EmployeeDetailPanelComponent } from '../employee-detail/employee-detail-panel.component';
 import {
   COUNTRY_CODES,
   CountryCode,
@@ -60,6 +61,7 @@ const EMPTY_TABLE_MESSAGES: Record<SearchOutcome['kind'] | 'pending', string> = 
     MatPaginatorModule,
     EnumLabelPipe,
     CountryNamePipe,
+    EmployeeDetailPanelComponent,
   ],
   templateUrl: './employee-directory-page.component.html',
   styleUrl: './employee-directory-page.component.scss',
@@ -107,6 +109,9 @@ export class EmployeeDirectoryPageComponent {
     () => EMPTY_TABLE_MESSAGES[this.outcome()?.kind ?? 'pending'],
   );
 
+  protected readonly selectedEmployeeId = signal<number | null>(null);
+  protected readonly selectedRow = signal<HTMLElement | null>(null);
+
   constructor() {
     this.filters.valueChanges
       .pipe(debounceTime(FILTER_DEBOUNCE_MILLISECONDS), takeUntilDestroyed())
@@ -138,6 +143,16 @@ export class EmployeeDirectoryPageComponent {
 
   protected trackById(_: number, employee: EmployeeSummary): number {
     return employee.id;
+  }
+
+  protected onRowSelected(employee: EmployeeSummary, row: EventTarget | null): void {
+    this.selectedRow.set(row instanceof HTMLElement ? row : null);
+    this.selectedEmployeeId.set(employee.id);
+  }
+
+  protected onDetailPanelClosed(): void {
+    this.selectedEmployeeId.set(null);
+    this.selectedRow.set(null);
   }
 
   private loadedResult(): PagedResponse<EmployeeSummary> | undefined {

@@ -1,3 +1,8 @@
+<app-employee-detail-panel
+  [employeeId]="selectedEmployeeId()"
+  [triggerElement]="selectedRow()"
+  (closed)="onDetailPanelClosed()"
+>
 <main class="directory" aria-labelledby="directory-heading">
   <h1 id="directory-heading">Employee directory</h1>
 
@@ -88,7 +93,15 @@
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-      <tr mat-row *matRowDef="let employee; columns: displayedColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let employee; columns: displayedColumns"
+        tabindex="0"
+        role="button"
+        [attr.aria-label]="'View details for ' + employee.name"
+        (click)="onRowSelected(employee, $event.currentTarget)"
+        (keydown.enter)="onRowSelected(employee, $event.currentTarget)"
+      ></tr>
       <tr class="mat-mdc-row empty-row" *matNoDataRow>
         <td class="mat-mdc-cell empty-message" [attr.colspan]="displayedColumns.length">
           {{ emptyTableMessage() }}
@@ -107,3 +120,4 @@
     aria-label="Select page of employees"
   />
 </main>
+</app-employee-detail-panel>
