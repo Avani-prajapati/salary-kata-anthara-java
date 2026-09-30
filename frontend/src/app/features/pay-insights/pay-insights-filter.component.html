@@ -1,0 +1,31 @@
+<form class="filter-bar" [formGroup]="filters" role="search" aria-label="Filter pay insights">
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Department</mat-label>
+    <mat-select formControlName="department">
+      <mat-option [value]="null">All departments</mat-option>
+      @for (department of departments; track department) {
+        <mat-option [value]="department">{{ department | enumLabel }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Country</mat-label>
+    <mat-select formControlName="countryCode">
+      <mat-option [value]="null">All countries</mat-option>
+      @for (countryCode of countryCodes; track countryCode) {
+        <mat-option [value]="countryCode">{{ countryCode | countryName }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Job level</mat-label>
+    <mat-select formControlName="jobLevel">
+      <mat-option [value]="null">All job levels</mat-option>
+      @for (jobLevel of jobLevels; track jobLevel) {
+        <mat-option [value]="jobLevel">{{ jobLevel | enumLabel }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</form>

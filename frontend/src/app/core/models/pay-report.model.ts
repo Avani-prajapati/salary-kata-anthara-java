@@ -1,4 +1,12 @@
+import { CountryCode, Department, JobLevel } from './employee.model';
+
 export type BreakdownDimension = 'department' | 'country' | 'jobLevel';
+
+export interface PayReportCriteria {
+  department: Department | null;
+  countryCode: CountryCode | null;
+  jobLevel: JobLevel | null;
+}
 
 export interface CurrencyAggregate {
   currencyCode: string;

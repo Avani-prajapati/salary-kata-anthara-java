@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.acme.salary.reporting.SalaryRow.paid;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,5 +87,41 @@ class ReportingServiceTest {
         assertThat(breakdown).extracting(GroupBreakdownResponse::groupKey).containsExactly("INTERN", "MID", "SENIOR");
         assertThat(breakdown.get(1).byCurrency()).extracting(CurrencyAggregate::currencyCode).containsExactly("JPY", "USD");
         assertThat(breakdown.get(2).byCurrency()).extracting(CurrencyAggregate::currencyCode).containsExactly("EUR", "USD");
+    }
+
+    @Test
+    void a_department_filter_narrows_the_summary_to_that_department_only() {
+        PayReportCriteria engineeringOnly = new PayReportCriteria(
+                Optional.of(Department.ENGINEERING), Optional.empty(), Optional.empty());
+
+        PaySummaryResponse summary = reportingService.summarize(engineeringOnly);
+
+        assertThat(summary.totalHeadcount()).isEqualTo(3);
+        assertThat(summary.byCurrency()).extracting(CurrencyAggregate::currencyCode).containsExactly("EUR", "USD");
+        assertThat(summary.byCurrency().get(1).headcount()).isEqualTo(2);
+        assertThat(summary.byCurrency().get(1).averageSalary()).isEqualByComparingTo("130000.00");
+    }
+
+    @Test
+    void a_department_filter_narrows_a_breakdown_by_another_dimension_to_that_department_only() {
+        PayReportCriteria salesOnly = new PayReportCriteria(
+                Optional.of(Department.SALES), Optional.empty(), Optional.empty());
+
+        List<GroupBreakdownResponse> breakdown = reportingService.breakdownBy(BreakdownDimension.COUNTRY, salesOnly);
+
+        assertThat(breakdown).extracting(GroupBreakdownResponse::groupKey).containsExactly("JP", "US");
+        assertThat(breakdown.get(0).byCurrency()).extracting(CurrencyAggregate::currencyCode).containsExactly("JPY");
+        assertThat(breakdown.get(1).byCurrency()).extracting(CurrencyAggregate::currencyCode).containsExactly("USD");
+    }
+
+    @Test
+    void a_filter_combination_matching_nobody_reports_zero_headcount_with_no_currencies_rather_than_an_error() {
+        PayReportCriteria matchesNobody = new PayReportCriteria(
+                Optional.of(Department.LEGAL), Optional.empty(), Optional.empty());
+
+        PaySummaryResponse summary = reportingService.summarize(matchesNobody);
+
+        assertThat(summary.totalHeadcount()).isZero();
+        assertThat(summary.byCurrency()).isEmpty();
     }
 }

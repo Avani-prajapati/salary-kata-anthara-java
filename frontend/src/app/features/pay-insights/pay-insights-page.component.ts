@@ -1,18 +1,22 @@
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
-import { catchError, forkJoin, map, Observable, of } from 'rxjs';
+import { catchError, forkJoin, map, Observable, of, switchMap } from 'rxjs';
 import { CountryNamePipe } from '../../core/formatting/country-name.pipe';
 import { EnumLabelPipe } from '../../core/formatting/enum-label.pipe';
 import {
   BreakdownDimension,
   CurrencyAggregate,
   GroupBreakdown,
+  PayReportCriteria,
   PaySummary,
 } from '../../core/models/pay-report.model';
+import { PayInsightsFilterComponent } from './pay-insights-filter.component';
 import { PayInsightsService } from './pay-insights.service';
+
+const NO_FILTERS: PayReportCriteria = { department: null, countryCode: null, jobLevel: null };
 
 interface BreakdownRow extends CurrencyAggregate {
   groupLabel: string;
@@ -67,7 +71,7 @@ const STATUS_MESSAGES: Record<InsightsOutcome['kind'] | 'pending', string> = {
 
 @Component({
   selector: 'app-pay-insights-page',
-  imports: [CurrencyPipe, DecimalPipe, MatCardModule, MatTableModule],
+  imports: [CurrencyPipe, DecimalPipe, MatCardModule, MatTableModule, PayInsightsFilterComponent],
   templateUrl: './pay-insights-page.component.html',
   styleUrl: './pay-insights-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -83,24 +87,33 @@ export class PayInsightsPageComponent {
     'medianSalary',
   ];
 
-  private readonly outcome = toSignal(this.loadInsights());
+  private readonly criteria = signal<PayReportCriteria>(NO_FILTERS);
+
+  private readonly outcome = toSignal(
+    toObservable(this.criteria).pipe(switchMap((criteria) => this.loadInsights(criteria))),
+  );
 
   protected readonly insights = computed(() => {
     const outcome = this.outcome();
     return outcome?.kind === 'loaded' ? outcome.insights : undefined;
   });
+  protected readonly isEmpty = computed(() => this.insights()?.summary.totalHeadcount === 0);
   protected readonly statusMessage = computed(
     () => STATUS_MESSAGES[this.outcome()?.kind ?? 'pending'],
   );
 
-  private loadInsights(): Observable<InsightsOutcome> {
+  protected onCriteriaChange(criteria: PayReportCriteria): void {
+    this.criteria.set(criteria);
+  }
+
+  private loadInsights(criteria: PayReportCriteria): Observable<InsightsOutcome> {
     const dimensions = Object.keys(DIMENSIONS) as BreakdownDimension[];
     return forkJoin({
-      summary: this.payInsights.getSummary(),
+      summary: this.payInsights.getSummary(criteria),
       breakdowns: forkJoin(
         dimensions.map((dimension) =>
           this.payInsights
-            .getBreakdown(dimension)
+            .getBreakdown(dimension, criteria)
             .pipe(map((groups) => toSection(dimension, groups))),
         ),
       ),

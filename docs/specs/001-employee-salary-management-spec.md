@@ -218,10 +218,10 @@ The HR manager narrows the Insights page to one department, country, or job leve
 
 **Acceptance criteria**
 
-- [ ] **5.8.1** The HR manager can filter Insights by department, country, and job level, independently or combined.
-- [ ] **5.8.2** Applying a filter recomputes headcount and average/median salary for exactly the filtered population.
-- [ ] **5.8.3** A filter combination matching zero employees shows a clear "no employees match" state rather than an error or a misleading zero.
-- [ ] **5.8.4** Clearing filters returns to the org-wide figures from [slice 5.7](#57-view-organization-wide-pay-insights).
+- [x] **5.8.1** The HR manager can filter Insights by department, country, and job level, independently or combined.
+- [x] **5.8.2** Applying a filter recomputes headcount and average/median salary for exactly the filtered population.
+- [x] **5.8.3** A filter combination matching zero employees shows a clear "no employees match" state rather than an error or a misleading zero.
+- [x] **5.8.4** Clearing filters returns to the org-wide figures from [slice 5.7](#57-view-organization-wide-pay-insights).
 
 ## 6. NFRs & regulatory compliance
 

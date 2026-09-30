@@ -1,5 +1,7 @@
 package com.acme.salary.reporting;
 
+import com.acme.salary.employee.Department;
+import com.acme.salary.employee.JobLevel;
 import com.acme.salary.reporting.dto.BreakdownDimension;
 import com.acme.salary.reporting.dto.CurrencyAggregate;
 import com.acme.salary.reporting.dto.GroupBreakdownResponse;
@@ -13,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.when;
@@ -83,5 +86,55 @@ class ReportingControllerWebMvcTest {
         mockMvc.perform(get("/api/reports/pay/breakdown").param("dimension", "salary"))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.code").value("INVALID_ARGUMENT"));
+    }
+
+    @Test
+    void summary_binds_a_single_department_filter_into_the_criteria() throws Exception {
+        PayReportCriteria departmentOnly = new PayReportCriteria(
+                Optional.of(Department.ENGINEERING), Optional.empty(), Optional.empty());
+        when(reportingService.summarize(departmentOnly)).thenReturn(new PaySummaryResponse(2, List.of()));
+
+        mockMvc.perform(get("/api/reports/pay/summary").param("department", "ENGINEERING"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalHeadcount").value(2));
+    }
+
+    @Test
+    void summary_binds_a_single_country_filter_into_the_criteria_uppercased() throws Exception {
+        PayReportCriteria countryOnly = new PayReportCriteria(
+                Optional.empty(), Optional.of("DE"), Optional.empty());
+        when(reportingService.summarize(countryOnly)).thenReturn(new PaySummaryResponse(1, List.of()));
+
+        mockMvc.perform(get("/api/reports/pay/summary").param("countryCode", "de"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalHeadcount").value(1));
+    }
+
+    @Test
+    void summary_binds_department_country_and_job_level_filters_in_combination() throws Exception {
+        PayReportCriteria combined = new PayReportCriteria(
+                Optional.of(Department.ENGINEERING), Optional.of("DE"), Optional.of(JobLevel.SENIOR));
+        when(reportingService.summarize(combined)).thenReturn(new PaySummaryResponse(1, List.of()));
+
+        mockMvc.perform(get("/api/reports/pay/summary")
+                        .param("department", "ENGINEERING")
+                        .param("countryCode", "DE")
+                        .param("jobLevel", "SENIOR"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalHeadcount").value(1));
+    }
+
+    @Test
+    void breakdown_binds_the_same_filters_alongside_its_dimension() throws Exception {
+        PayReportCriteria jobLevelOnly = new PayReportCriteria(
+                Optional.empty(), Optional.empty(), Optional.of(JobLevel.SENIOR));
+        when(reportingService.breakdownBy(BreakdownDimension.COUNTRY, jobLevelOnly))
+                .thenReturn(List.of(new GroupBreakdownResponse("DE", List.of())));
+
+        mockMvc.perform(get("/api/reports/pay/breakdown")
+                        .param("dimension", "country")
+                        .param("jobLevel", "SENIOR"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].groupKey").value("DE"));
     }
 }

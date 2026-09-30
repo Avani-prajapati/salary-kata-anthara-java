@@ -4,98 +4,109 @@
     Salaries are reported separately for each currency; no currency conversion is applied.
   </p>
 
+  <app-pay-insights-filter (criteriaChange)="onCriteriaChange($event)" />
+
   @if (insights(); as insights) {
-    <section aria-labelledby="summary-heading">
-      <h2 id="summary-heading">Organization summary</h2>
-      <ul class="summary-tiles">
-        <li>
-          <mat-card appearance="outlined" class="tile">
-            <mat-card-content>
-              <h3 class="tile-title">Total headcount</h3>
-              <p class="tile-figure" data-testid="total-headcount">
-                {{ insights.summary.totalHeadcount | number }}
-              </p>
-            </mat-card-content>
-          </mat-card>
-        </li>
-        @for (aggregate of insights.summary.byCurrency; track aggregate.currencyCode) {
+    @if (isEmpty()) {
+      <p class="status-message" role="status">No employees match the selected filters.</p>
+    } @else {
+      <section aria-labelledby="summary-heading">
+        <h2 id="summary-heading">Organization summary</h2>
+        <ul class="summary-tiles">
           <li>
-            <mat-card appearance="outlined" class="tile" data-testid="currency-tile">
+            <mat-card appearance="outlined" class="tile">
               <mat-card-content>
-                <h3 class="tile-title">Paid in {{ aggregate.currencyCode }}</h3>
-                <dl class="tile-figures">
-                  <dt>Headcount</dt>
-                  <dd data-testid="headcount">{{ aggregate.headcount | number }}</dd>
-                  <dt>Average salary</dt>
-                  <dd data-testid="average-salary">
-                    {{
-                      aggregate.averageSalary
-                        | currency: aggregate.currencyCode : 'symbol' : '1.0-2'
-                    }}
-                  </dd>
-                  <dt>Median salary</dt>
-                  <dd data-testid="median-salary">
-                    {{
-                      aggregate.medianSalary | currency: aggregate.currencyCode : 'symbol' : '1.0-2'
-                    }}
-                  </dd>
-                </dl>
+                <h3 class="tile-title">Total headcount</h3>
+                <p class="tile-figure" data-testid="total-headcount">
+                  {{ insights.summary.totalHeadcount | number }}
+                </p>
               </mat-card-content>
             </mat-card>
           </li>
-        }
-      </ul>
-    </section>
-
-    @for (section of insights.breakdowns; track section.dimension) {
-      <section class="breakdown" [attr.aria-labelledby]="section.dimension + '-heading'">
-        <h2 [id]="section.dimension + '-heading'">{{ section.heading }}</h2>
-        <div class="table-container">
-          <table
-            mat-table
-            [dataSource]="section.rows"
-            [attr.aria-labelledby]="section.dimension + '-heading'"
-          >
-            <ng-container matColumnDef="group">
-              <th mat-header-cell *matHeaderCellDef scope="col">{{ section.groupColumnHeader }}</th>
-              <td mat-cell *matCellDef="let row">{{ row.groupLabel }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="currencyCode">
-              <th mat-header-cell *matHeaderCellDef scope="col">Currency</th>
-              <td mat-cell *matCellDef="let row">{{ row.currencyCode }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="headcount">
-              <th mat-header-cell *matHeaderCellDef scope="col" class="figure-column">Headcount</th>
-              <td mat-cell *matCellDef="let row" class="figure-column">
-                {{ row.headcount | number }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="averageSalary">
-              <th mat-header-cell *matHeaderCellDef scope="col" class="figure-column">
-                Average salary
-              </th>
-              <td mat-cell *matCellDef="let row" class="figure-column">
-                {{ row.averageSalary | currency: row.currencyCode : 'symbol' : '1.0-2' }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="medianSalary">
-              <th mat-header-cell *matHeaderCellDef scope="col" class="figure-column">
-                Median salary
-              </th>
-              <td mat-cell *matCellDef="let row" class="figure-column">
-                {{ row.medianSalary | currency: row.currencyCode : 'symbol' : '1.0-2' }}
-              </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="breakdownColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: breakdownColumns"></tr>
-          </table>
-        </div>
+          @for (aggregate of insights.summary.byCurrency; track aggregate.currencyCode) {
+            <li>
+              <mat-card appearance="outlined" class="tile" data-testid="currency-tile">
+                <mat-card-content>
+                  <h3 class="tile-title">Paid in {{ aggregate.currencyCode }}</h3>
+                  <dl class="tile-figures">
+                    <dt>Headcount</dt>
+                    <dd data-testid="headcount">{{ aggregate.headcount | number }}</dd>
+                    <dt>Average salary</dt>
+                    <dd data-testid="average-salary">
+                      {{
+                        aggregate.averageSalary
+                          | currency: aggregate.currencyCode : 'symbol' : '1.0-2'
+                      }}
+                    </dd>
+                    <dt>Median salary</dt>
+                    <dd data-testid="median-salary">
+                      {{
+                        aggregate.medianSalary
+                          | currency: aggregate.currencyCode : 'symbol' : '1.0-2'
+                      }}
+                    </dd>
+                  </dl>
+                </mat-card-content>
+              </mat-card>
+            </li>
+          }
+        </ul>
       </section>
+
+      @for (section of insights.breakdowns; track section.dimension) {
+        <section class="breakdown" [attr.aria-labelledby]="section.dimension + '-heading'">
+          <h2 [id]="section.dimension + '-heading'">{{ section.heading }}</h2>
+          <div class="table-container">
+            <table
+              mat-table
+              [dataSource]="section.rows"
+              [attr.aria-labelledby]="section.dimension + '-heading'"
+            >
+              <ng-container matColumnDef="group">
+                <th mat-header-cell *matHeaderCellDef scope="col">
+                  {{ section.groupColumnHeader }}
+                </th>
+                <td mat-cell *matCellDef="let row">{{ row.groupLabel }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="currencyCode">
+                <th mat-header-cell *matHeaderCellDef scope="col">Currency</th>
+                <td mat-cell *matCellDef="let row">{{ row.currencyCode }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="headcount">
+                <th mat-header-cell *matHeaderCellDef scope="col" class="figure-column">
+                  Headcount
+                </th>
+                <td mat-cell *matCellDef="let row" class="figure-column">
+                  {{ row.headcount | number }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="averageSalary">
+                <th mat-header-cell *matHeaderCellDef scope="col" class="figure-column">
+                  Average salary
+                </th>
+                <td mat-cell *matCellDef="let row" class="figure-column">
+                  {{ row.averageSalary | currency: row.currencyCode : 'symbol' : '1.0-2' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="medianSalary">
+                <th mat-header-cell *matHeaderCellDef scope="col" class="figure-column">
+                  Median salary
+                </th>
+                <td mat-cell *matCellDef="let row" class="figure-column">
+                  {{ row.medianSalary | currency: row.currencyCode : 'symbol' : '1.0-2' }}
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="breakdownColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: breakdownColumns"></tr>
+            </table>
+          </div>
+        </section>
+      }
     }
   } @else {
     <p class="status-message" role="status">{{ statusMessage() }}</p>

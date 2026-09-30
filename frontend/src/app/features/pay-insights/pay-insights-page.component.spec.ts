@@ -1,8 +1,13 @@
 import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+  TestRequest,
+} from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HarnessLoader } from '@angular/cdk/testing';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatSelectHarness } from '@angular/material/select/testing';
 import { MatTableHarness } from '@angular/material/table/testing';
 import { GroupBreakdown, PaySummary } from '../../core/models/pay-report.model';
 import { PayInsightsPageComponent } from './pay-insights-page.component';
@@ -43,6 +48,16 @@ const BY_JOB_LEVEL: GroupBreakdown[] = [
   },
 ];
 
+const ENGINEERING_SUMMARY: PaySummary = {
+  totalHeadcount: 3,
+  byCurrency: [
+    { currencyCode: 'EUR', headcount: 1, averageSalary: 95000, medianSalary: 95000 },
+    { currencyCode: 'USD', headcount: 2, averageSalary: 130000, medianSalary: 130000 },
+  ],
+};
+
+const NO_MATCH_SUMMARY: PaySummary = { totalHeadcount: 0, byCurrency: [] };
+
 describe('pay insights page', () => {
   let fixture: ComponentFixture<PayInsightsPageComponent>;
   let httpTesting: HttpTestingController;
@@ -73,12 +88,32 @@ describe('pay insights page', () => {
     );
   }
 
+  function pendingSummaryRequest(): TestRequest {
+    return httpTesting.expectOne((request) => request.url === '/api/reports/pay/summary'
+      || request.url.startsWith('/api/reports/pay/summary?'));
+  }
+
+  function pendingBreakdownRequest(dimension: string): TestRequest {
+    return httpTesting.expectOne(
+      (request) =>
+        request.url.startsWith('/api/reports/pay/breakdown')
+        && request.params.get('dimension') === dimension,
+    );
+  }
+
   async function respondWithOrgWideReports(): Promise<void> {
-    httpTesting.expectOne('/api/reports/pay/summary').flush(SUMMARY);
-    httpTesting.expectOne('/api/reports/pay/breakdown?dimension=department').flush(BY_DEPARTMENT);
-    httpTesting.expectOne('/api/reports/pay/breakdown?dimension=country').flush(BY_COUNTRY);
-    httpTesting.expectOne('/api/reports/pay/breakdown?dimension=jobLevel').flush(BY_JOB_LEVEL);
+    pendingSummaryRequest().flush(SUMMARY);
+    pendingBreakdownRequest('department').flush(BY_DEPARTMENT);
+    pendingBreakdownRequest('country').flush(BY_COUNTRY);
+    pendingBreakdownRequest('jobLevel').flush(BY_JOB_LEVEL);
     await fixture.whenStable();
+  }
+
+  async function selectDepartment(label: string): Promise<void> {
+    const departmentSelect = await loader.getHarness(
+      MatSelectHarness.with({ selector: '[formControlName="department"]' }),
+    );
+    await departmentSelect.clickOptions({ text: label });
   }
 
   it('shows total headcount and a headcount, average and median tile for each currency', async () => {
@@ -141,16 +176,81 @@ describe('pay insights page', () => {
     ]);
   });
 
-  it('is read-only with no controls to edit anything', async () => {
+  it('is read-only with no controls to edit anything, only to filter what is shown', async () => {
     await respondWithOrgWideReports();
 
-    expect(page().querySelectorAll('button, input, select, textarea, form')).toHaveLength(0);
+    const controlsOutsideTheFilterBar = Array.from(
+      page().querySelectorAll('button, input, select, textarea, form'),
+    ).filter((element) => element.getAttribute('role') !== 'search' && !element.closest('[role="search"]'));
+
+    expect(controlsOutsideTheFilterBar).toHaveLength(0);
   });
 
   it('reads only pre-aggregated reports and never the employee list', async () => {
     await respondWithOrgWideReports();
 
     httpTesting.expectNone((request) => request.url.startsWith('/api/employees'));
+  });
+
+  it('narrows the summary and breakdown figures to a selected department', async () => {
+    await respondWithOrgWideReports();
+
+    await selectDepartment('Engineering');
+    const summaryRequest = pendingSummaryRequest();
+    expect(summaryRequest.request.params.get('department')).toBe('ENGINEERING');
+    summaryRequest.flush(ENGINEERING_SUMMARY);
+    const departmentRequest = pendingBreakdownRequest('department');
+    expect(departmentRequest.request.params.get('department')).toBe('ENGINEERING');
+    departmentRequest.flush(BY_DEPARTMENT);
+    pendingBreakdownRequest('country').flush(BY_COUNTRY);
+    pendingBreakdownRequest('jobLevel').flush(BY_JOB_LEVEL);
+    await fixture.whenStable();
+
+    expect(page().querySelector('[data-testid="total-headcount"]')?.textContent?.trim()).toBe('3');
+    expect(texts('[data-testid="average-salary"]')).toEqual(['€95,000', '$130,000']);
+  });
+
+  it('shows an explicit "no employees match" state for a filter combination that matches nobody', async () => {
+    await respondWithOrgWideReports();
+
+    await selectDepartment('Legal');
+    pendingSummaryRequest().flush(NO_MATCH_SUMMARY);
+    pendingBreakdownRequest('department').flush([]);
+    pendingBreakdownRequest('country').flush([]);
+    pendingBreakdownRequest('jobLevel').flush([]);
+    await fixture.whenStable();
+
+    expect(page().querySelector('[role="status"]')?.textContent?.trim()).toBe(
+      'No employees match the selected filters.',
+    );
+    expect(page().querySelectorAll('[data-testid="currency-tile"]')).toHaveLength(0);
+    expect(page().querySelector('[data-testid="total-headcount"]')).toBeNull();
+  });
+
+  it('reproduces the exact org-wide figures when filters are cleared', async () => {
+    await respondWithOrgWideReports();
+    await selectDepartment('Engineering');
+    pendingSummaryRequest().flush(ENGINEERING_SUMMARY);
+    pendingBreakdownRequest('department').flush(BY_DEPARTMENT);
+    pendingBreakdownRequest('country').flush(BY_COUNTRY);
+    pendingBreakdownRequest('jobLevel').flush(BY_JOB_LEVEL);
+    await fixture.whenStable();
+
+    await selectDepartment('All departments');
+    const clearedSummaryRequest = pendingSummaryRequest();
+    expect(clearedSummaryRequest.request.params.has('department')).toBe(false);
+    clearedSummaryRequest.flush(SUMMARY);
+    pendingBreakdownRequest('department').flush(BY_DEPARTMENT);
+    pendingBreakdownRequest('country').flush(BY_COUNTRY);
+    pendingBreakdownRequest('jobLevel').flush(BY_JOB_LEVEL);
+    await fixture.whenStable();
+
+    expect(page().querySelector('[data-testid="total-headcount"]')?.textContent?.trim()).toBe('3');
+    expect(texts('[data-testid="currency-tile"] .tile-title')).toEqual([
+      'Paid in EUR',
+      'Paid in USD',
+    ]);
+    expect(texts('[data-testid="average-salary"]')).toEqual(['€82,000', '$100,000']);
   });
 
   it('shows an error message when the reports cannot be loaded', async () => {
