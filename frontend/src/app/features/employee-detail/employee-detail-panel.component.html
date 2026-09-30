@@ -32,7 +32,13 @@
           <app-employee-profile-form
             [employee]="current.employee"
             (saved)="onProfileSaved($event)"
-            (cancelled)="cancelEditing()"
+            (cancelled)="returnToView()"
+          />
+        } @else if (mode() === 'salary') {
+          <app-salary-change-form
+            [employeeId]="current.employee.id"
+            (saved)="onSalarySaved()"
+            (cancelled)="returnToView()"
           />
         } @else {
           <dl class="detail-fields">
@@ -59,7 +65,10 @@
               }}
             </dd>
           </dl>
-          <button mat-button type="button" (click)="startEditing()">Edit profile</button>
+          <div class="detail-actions">
+            <button mat-button type="button" (click)="startEditing()">Edit profile</button>
+            <button mat-button type="button" (click)="startChangingSalary()">Change salary</button>
+          </div>
         }
       }
     }

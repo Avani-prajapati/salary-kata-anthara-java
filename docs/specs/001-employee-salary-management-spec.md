@@ -161,12 +161,12 @@ sequenceDiagram
 
 **Acceptance criteria**
 
-- [ ] **5.4.1** The HR manager can submit a new salary amount, ISO currency code, and effective date for an employee.
-- [ ] **5.4.2** A submitted salary amount that is zero or negative is rejected with a `422` Problem Details response before any record is written.
-- [ ] **5.4.3** A successful change creates a new, append-only SalaryHistory record and never modifies or deletes an existing one.
-- [ ] **5.4.4** An employee has exactly one current salary at any time — the most recent SalaryHistory record by effective date is the one shown.
-- [ ] **5.4.5** The salary amount is stored and returned as a decimal value with its currency code, never a floating-point type.
-- [ ] **5.4.6** The updated current salary is reflected immediately in the directory table and detail panel.
+- [x] **5.4.1** The HR manager can submit a new salary amount, ISO currency code, and effective date for an employee.
+- [x] **5.4.2** A submitted salary amount that is zero or negative is rejected with a `422` Problem Details response before any record is written.
+- [x] **5.4.3** A successful change creates a new, append-only SalaryHistory record and never modifies or deletes an existing one.
+- [x] **5.4.4** An employee has exactly one current salary at any time — the most recent SalaryHistory record by effective date is the one shown.
+- [x] **5.4.5** The salary amount is stored and returned as a decimal value with its currency code, never a floating-point type.
+- [x] **5.4.6** The updated current salary is reflected immediately in the directory table and detail panel.
 
 ### 5.5 View an employee's salary history
 

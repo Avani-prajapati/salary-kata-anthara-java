@@ -162,6 +162,14 @@ export class EmployeeDirectoryPageComponent {
   }
 
   protected onProfileUpdated(updated: EmployeeDetail): void {
+    this.overrideRow(updated);
+  }
+
+  protected onSalaryChanged(updated: EmployeeDetail): void {
+    this.overrideRow(updated);
+  }
+
+  private overrideRow(updated: EmployeeDetail): void {
     const row: EmployeeSummary = {
       id: updated.id,
       name: updated.name,

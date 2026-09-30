@@ -19,6 +19,7 @@ import { EnumLabelPipe } from '../../core/formatting/enum-label.pipe';
 import { EmployeeDetail } from '../../core/models/employee.model';
 import { EmployeeDetailService } from './employee-detail.service';
 import { EmployeeProfileFormComponent } from './employee-profile-form.component';
+import { SalaryChangeFormComponent } from './salary/salary-change-form.component';
 
 type PanelState =
   | { kind: 'idle' }
@@ -26,7 +27,7 @@ type PanelState =
   | { kind: 'loaded'; employee: EmployeeDetail }
   | { kind: 'not-found' };
 
-type PanelMode = 'view' | 'edit';
+type PanelMode = 'view' | 'edit' | 'salary';
 
 @Component({
   selector: 'app-employee-detail-panel',
@@ -37,6 +38,7 @@ type PanelMode = 'view' | 'edit';
     EnumLabelPipe,
     CountryNamePipe,
     EmployeeProfileFormComponent,
+    SalaryChangeFormComponent,
   ],
   templateUrl: './employee-detail-panel.component.html',
   styleUrl: './employee-detail-panel.component.scss',
@@ -49,6 +51,7 @@ export class EmployeeDetailPanelComponent {
   readonly triggerElement = input<HTMLElement | null>(null);
   readonly closed = output<void>();
   readonly profileUpdated = output<EmployeeDetail>();
+  readonly salaryChanged = output<EmployeeDetail>();
 
   protected readonly drawer = viewChild.required(MatDrawer);
   protected readonly panelTitleId = 'employee-detail-panel-title';
@@ -88,7 +91,11 @@ export class EmployeeDetailPanelComponent {
     this.mode.set('edit');
   }
 
-  protected cancelEditing(): void {
+  protected startChangingSalary(): void {
+    this.mode.set('salary');
+  }
+
+  protected returnToView(): void {
     this.mode.set('view');
   }
 
@@ -96,6 +103,18 @@ export class EmployeeDetailPanelComponent {
     this.state.set({ kind: 'loaded', employee: updated });
     this.mode.set('view');
     this.profileUpdated.emit(updated);
+  }
+
+  protected onSalarySaved(): void {
+    const id = this.employeeId();
+    if (id === null) {
+      return;
+    }
+    this.employeeDetailService.getById(id).subscribe((refreshed) => {
+      this.state.set({ kind: 'loaded', employee: refreshed });
+      this.mode.set('view');
+      this.salaryChanged.emit(refreshed);
+    });
   }
 
   private fetchOutcome(id: number | null): Observable<PanelState> {

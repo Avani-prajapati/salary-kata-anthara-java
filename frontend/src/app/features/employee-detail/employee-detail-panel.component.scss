@@ -39,3 +39,8 @@
   margin: 0;
   font: var(--mat-sys-body-large);
 }
+
+.detail-actions {
+  display: flex;
+  gap: 0.5rem;
+}

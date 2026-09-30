@@ -1,0 +1,30 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" aria-label="Change salary">
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Amount</mat-label>
+    <input matInput type="number" step="0.01" formControlName="amount" />
+    @if (form.controls.amount.invalid) {
+      <mat-error>Amount must be greater than zero.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Currency</mat-label>
+    <input matInput type="text" maxlength="3" formControlName="currencyCode" />
+    @if (form.controls.currencyCode.invalid) {
+      <mat-error>Currency must be a 3-letter ISO code.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Effective date</mat-label>
+    <input matInput type="date" formControlName="effectiveDate" />
+    @if (form.controls.effectiveDate.invalid) {
+      <mat-error>Effective date is required.</mat-error>
+    }
+  </mat-form-field>
+
+  <div class="form-actions">
+    <button mat-button type="button" (click)="onCancel()">Cancel</button>
+    <button mat-flat-button type="submit" [disabled]="saving()">Save</button>
+  </div>
+</form>

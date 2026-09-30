@@ -73,3 +73,16 @@ export interface EmployeeProfileUpdateRequest {
   hireDate: string;
   managerId: number | null;
 }
+
+export interface SalaryHistoryEntry {
+  amount: number;
+  currencyCode: string;
+  effectiveDate: string;
+  recordedAt: string;
+}
+
+export interface SalaryChangeRequest {
+  amount: number;
+  currencyCode: string;
+  effectiveDate: string;
+}

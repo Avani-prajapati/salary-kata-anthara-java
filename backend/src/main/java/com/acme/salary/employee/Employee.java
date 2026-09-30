@@ -112,6 +112,11 @@ public class Employee {
         return updatedAt;
     }
 
+    public void recordSalaryChange(Money currentSalary, Instant updatedAt) {
+        this.currentSalary = currentSalary;
+        this.updatedAt = updatedAt;
+    }
+
     public void applyProfileUpdate(
             Department department,
             JobLevel jobLevel,
