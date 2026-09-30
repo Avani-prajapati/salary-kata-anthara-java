@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: salary-kata
+  datasource:
+    url: jdbc:sqlite:${SALARY_DB_PATH:./salary-kata.db}?foreign_keys=true
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 1
+  jpa:
+    open-in-view: false
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
+  data:
+    web:
+      pageable:
+        default-page-size: 25
+        max-page-size: 100

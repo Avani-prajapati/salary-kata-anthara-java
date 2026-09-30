@@ -99,14 +99,14 @@ When the HR manager opens the app, they land on the Employee Directory: a pagina
 
 **Acceptance criteria**
 
-- [ ] **5.1.1** The directory lists employees in a paginated table (default page size 25, capped maximum enforced server-side), showing name, department, job title, country, and current salary with its currency.
-- [ ] **5.1.2** The HR manager can search employees by name (case-insensitive, partial match).
-- [ ] **5.1.3** The HR manager can filter the list by department, country, and job title, independently or combined.
-- [ ] **5.1.4** The HR manager can sort the table by name, department, country, job title, or current salary, ascending or descending.
-- [ ] **5.1.5** List endpoints never return more rows than the configured page size, regardless of the 10,000-row dataset.
-- [ ] **5.1.6** Running the seed script against a fresh database populates exactly 10,000 employee records spanning multiple countries, departments, and job levels with realistic salary distributions; re-running it against the same fresh database is idempotent (no duplicate rows).
-- [ ] **5.1.7** An empty search/filter result shows a clear "no employees match" state, not a blank table or an error.
-- [ ] **5.1.8** Table headers, sort controls, and pagination controls are reachable and operable by keyboard, with visible focus indicators.
+- [x] **5.1.1** The directory lists employees in a paginated table (default page size 25, capped maximum enforced server-side), showing name, department, job title, country, and current salary with its currency.
+- [x] **5.1.2** The HR manager can search employees by name (case-insensitive, partial match).
+- [x] **5.1.3** The HR manager can filter the list by department, country, and job title, independently or combined.
+- [x] **5.1.4** The HR manager can sort the table by name, department, country, job title, or current salary, ascending or descending.
+- [x] **5.1.5** List endpoints never return more rows than the configured page size, regardless of the 10,000-row dataset.
+- [x] **5.1.6** Running the seed script against a fresh database populates exactly 10,000 employee records spanning multiple countries, departments, and job levels with realistic salary distributions; re-running it against the same fresh database is idempotent (no duplicate rows).
+- [x] **5.1.7** An empty search/filter result shows a clear "no employees match" state, not a blank table or an error.
+- [x] **5.1.8** Table headers, sort controls, and pagination controls are reachable and operable by keyboard, with visible focus indicators.
 
 ### 5.2 View an employee's full detail
 

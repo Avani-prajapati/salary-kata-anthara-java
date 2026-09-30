@@ -1,0 +1,109 @@
+<main class="directory" aria-labelledby="directory-heading">
+  <h1 id="directory-heading">Employee directory</h1>
+
+  <form class="filter-bar" [formGroup]="filters" role="search" aria-label="Filter employees">
+    <mat-form-field class="name-search" appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Search by name</mat-label>
+      <input matInput type="search" formControlName="name" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Department</mat-label>
+      <mat-select formControlName="department">
+        <mat-option [value]="null">All departments</mat-option>
+        @for (department of departments; track department) {
+          <mat-option [value]="department">{{ department | enumLabel }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Country</mat-label>
+      <mat-select formControlName="countryCode">
+        <mat-option [value]="null">All countries</mat-option>
+        @for (countryCode of countryCodes; track countryCode) {
+          <mat-option [value]="countryCode">{{ countryCode | countryName }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Job level</mat-label>
+      <mat-select formControlName="jobLevel">
+        <mat-option [value]="null">All job levels</mat-option>
+        @for (jobLevel of jobLevels; track jobLevel) {
+          <mat-option [value]="jobLevel">{{ jobLevel | enumLabel }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </form>
+
+  <p class="result-summary" aria-live="polite">{{ totalElements() }} employees found</p>
+
+  <div class="table-container">
+    <table
+      mat-table
+      [dataSource]="rows()"
+      [trackBy]="trackById"
+      matSort
+      matSortActive="name"
+      matSortDirection="asc"
+      matSortDisableClear
+      (matSortChange)="onSortChange($event)"
+      aria-labelledby="directory-heading"
+    >
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+        <td mat-cell *matCellDef="let employee">{{ employee.name }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="department">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Department</th>
+        <td mat-cell *matCellDef="let employee">{{ employee.department | enumLabel }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="jobLevel">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Job level</th>
+        <td mat-cell *matCellDef="let employee">{{ employee.jobLevel | enumLabel }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="countryCode">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Country</th>
+        <td mat-cell *matCellDef="let employee">{{ employee.countryCode | countryName }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="salaryAmount">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          mat-sort-header
+          arrowPosition="before"
+          class="salary-column"
+        >
+          Salary
+        </th>
+        <td mat-cell *matCellDef="let employee" class="salary-column">
+          {{ employee.salaryAmount | currency: employee.salaryCurrency : 'symbol' : '1.0-2' }}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+      <tr mat-row *matRowDef="let employee; columns: displayedColumns"></tr>
+      <tr class="mat-mdc-row empty-row" *matNoDataRow>
+        <td class="mat-mdc-cell empty-message" [attr.colspan]="displayedColumns.length">
+          {{ emptyTableMessage() }}
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <mat-paginator
+    [length]="totalElements()"
+    [pageIndex]="pageIndex()"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="pageSizeOptions"
+    (page)="onPageChange($event)"
+    showFirstLastButtons
+    aria-label="Select page of employees"
+  />
+</main>
