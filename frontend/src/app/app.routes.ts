@@ -9,5 +9,13 @@ export const routes: Routes = [
         (module) => module.EMPLOYEE_DIRECTORY_ROUTES,
       ),
   },
+  {
+    path: 'insights',
+    title: 'Pay insights · ACME Salary Management',
+    loadComponent: () =>
+      import('./features/pay-insights/pay-insights-page.component').then(
+        (module) => module.PayInsightsPageComponent,
+      ),
+  },
   { path: '**', redirectTo: 'employees' },
 ];

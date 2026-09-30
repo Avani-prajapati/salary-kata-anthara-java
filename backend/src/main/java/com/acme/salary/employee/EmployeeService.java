@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -63,6 +64,10 @@ public class EmployeeService {
         Employee employee = findByIdOrThrow(id);
         String managerName = findManagerName(employee.getManagerId());
         return EmployeeDetailResponse.from(employee, managerName);
+    }
+
+    public List<EmployeeSalaryProjection> findAllForReporting() {
+        return employeeRepository.findAllProjections();
     }
 
     @Transactional

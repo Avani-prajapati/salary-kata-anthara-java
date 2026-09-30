@@ -203,12 +203,12 @@ The HR manager opens the Insights page to answer "how does the org pay people" a
 
 **Acceptance criteria**
 
-- [ ] **5.7.1** The Insights page shows total headcount and overall average and median current salary, grouped per currency (no cross-currency conversion is performed, per [§9.2](#9-deferred-follow-ups-and-accepted-limits)).
-- [ ] **5.7.2** The page shows average salary and headcount broken down by department.
-- [ ] **5.7.3** The page shows average salary and headcount broken down by country.
-- [ ] **5.7.4** The page shows average salary and headcount broken down by job title/level.
-- [ ] **5.7.5** Aggregates are computed server-side by the reporting endpoint; the browser never fetches all 10,000 employee rows to compute them client-side.
-- [ ] **5.7.6** Insights are read-only; no edit affordance exists on this page.
+- [x] **5.7.1** The Insights page shows total headcount and overall average and median current salary, grouped per currency (no cross-currency conversion is performed, per [§9.2](#9-deferred-follow-ups-and-accepted-limits)).
+- [x] **5.7.2** The page shows average salary and headcount broken down by department.
+- [x] **5.7.3** The page shows average salary and headcount broken down by country.
+- [x] **5.7.4** The page shows average salary and headcount broken down by job title/level.
+- [x] **5.7.5** Aggregates are computed server-side by the reporting endpoint; the browser never fetches all 10,000 employee rows to compute them client-side.
+- [x] **5.7.6** Insights are read-only; no edit affordance exists on this page.
 
 ### 5.8 Filter pay insights by department, country, or role
 

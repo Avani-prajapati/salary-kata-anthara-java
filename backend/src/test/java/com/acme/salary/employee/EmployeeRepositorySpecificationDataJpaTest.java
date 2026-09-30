@@ -131,6 +131,21 @@ class EmployeeRepositorySpecificationDataJpaTest {
         assertThat(usEmployees.getFirst().salaryCurrency()).isEqualTo("USD");
     }
 
+    @Test
+    void reporting_projections_carry_each_employees_grouping_fields_and_exact_salary() {
+        List<EmployeeSalaryProjection> projections = employeeRepository.findAllProjections();
+
+        assertThat(projections).hasSize(5);
+        EmployeeSalaryProjection benMiller = projections.stream()
+                .filter(row -> "US".equals(row.getCountryCode()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(benMiller.getDepartment()).isEqualTo(Department.ENGINEERING);
+        assertThat(benMiller.getJobLevel()).isEqualTo(JobLevel.MID);
+        assertThat(benMiller.getSalaryCurrencyCode()).isEqualTo("USD");
+        assertThat(benMiller.getSalaryAmount()).isEqualByComparingTo(new BigDecimal("105000.50"));
+    }
+
     private List<String> namesMatching(CriteriaBuilder criteria) {
         return namesMatching(criteria.build());
     }
